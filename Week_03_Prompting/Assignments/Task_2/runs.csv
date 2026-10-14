@@ -1,0 +1,4 @@
+prompt,prompt_file,model,inference_time,correct,total,accuracy,predictions_file
+RTF,../Task_1/prompts/RTF.txt,Claude Opus 5.5,1:08,147,155,0.9484,data/RTF/restaurants_dataset_predictions.csv
+CO-STAR,../Task_1/prompts/CO-STAR.txt,Claude Opus 5.5,1:19,154,155,0.9935,data/CO-STAR/restaurants_dataset_predictions.csv
+CoT,../Task_1/prompts/CoT.txt,Claude Opus 5.5,2:03,154,155,0.9935,data/CoT/restaurants_dataset_predictions.csv

@@ -1,0 +1,187 @@
+I'll study the schema and questions, then write the queries and build the CSV.
+
+## Conventions applied to every question
+
+These rules came out of studying the schema and apply throughout the numbered reasoning:
+
+- **Base join:** `restaurant AS t1 JOIN location AS t2 ON t1.id = t2.restaurant_id`. This puts both required output columns, `t2.house_number` and `t1.name`, in reach, in that order.
+- **Filters:**
+  - A city goes to `t2.city_name`.
+  - A street goes to `t2.street_name`.
+  - A food type goes to `t1.food_type`.
+  - A name goes to `t1.name`.
+  - A region ("in the bay area", "in the monterey", etc.) adds `JOIN geographic AS t3 ON t1.city_name = t3.city_name` and the filter `t3.region = …`.
+- **Literal values:** every value is copied exactly as written, including oddities like `'st'`, `'ave.'`, `'n.shoreline blvd.'`, `'california'` and `'unknown'`.
+- **Wording:**
+  - **"best"** means the rating equals the MAX rating under the same filters, using a correlated subquery. This keeps ties and avoids an arbitrary `LIMIT 1`.
+  - **"above X"** is a strict `t1.rating > X`. The parenthetical label, such as "(below average or better)", only describes the threshold and is ignored.
+  - **"a restaurant", "some", "where can i…"** add no limit. All matches are returned.
+- **Chatter:** everything about picnics, pancakes, umbrellas and stuffed animals is dropped.
+
+## Reasoning per question
+
+Each line shows the filters used (C = city, S = street, F = food type, R = rating above, Reg = region, N = name). Every query uses the base join, plus the geographic join wherever Reg appears.
+
+1. C winters, F tea, best → MAX rating subquery.
+2. C moraga, F european, best.
+3. C eagan, F egyptian, best.
+4. C atherton, F burmese, best.
+5. Chatter dropped. C tahoe city, F potatoes, best.
+6. C portola valley, F californian, best.
+7. Chatter dropped. C santa rosa, F dim sum, best.
+8. Chatter dropped. C crockett, F peruvian, best.
+9. C calistoga, F eclectic, best.
+10. C rio del mar, F delivery, best.
+11. Chatter dropped. C san jose, S timber creek dr, R 1.7.
+12. C lafayette, S plaza way, R 1.8.
+13. C belmont, S "avenue near the alameda" (literal), R 2.3.
+14. C sunnyvale, S w evelyn ave ste 108, R 2.
+15. C san jose, S san ignacio ave, R 1.7.
+16. C palo alto, F drive in. No rating filter.
+17. C glen ellen, F bar.
+18. C foster city, F juice bar.
+19. C oakland, F spanish.
+20. C moss beach, F swiss.
+21. Chatter dropped. C forestville, R 4.5.
+22. C vallejo, R 2.
+23. C alameda, R 2.
+24. C san juan bautista, R 4.5.
+25. Chatter dropped. C larkspur, R 4.5.
+26. Long chatter before and after dropped. C oakland, R 2.
+27. Chatter dropped. C vacaville, R 2.
+28. C alameda, R 2.
+29. C east palo alto, R 2.
+30. C santa cruz, R 2.5.
+31. C brentwood, R 2.
+32. C mill valley, R 4.5.
+33. C rio vista, R 2.
+34. C rio del mar, R 1.7.
+35. C lafayette, R 2.
+36. C san francisco, S noriega, F mexican, R 2.
+37. C emeryville, S shellmound st # 12, F vietnamese, R 1.7.
+38. C sunnyvale, S persian dr, F mexican, R 4.5.
+39. C san bruno, S el camino real, F cafe, R 2.
+40. C hollister, S hawkins st, F pizza, R 4.5.
+41. C san mateo, S hillsdale mall, F ice cream, R 1.8.
+42. C sonoma, S "st" (literal), F winery, R 1.7.
+43. C danville, S hartz av, F cafe, R 2.
+44. C fremont, S othello dr, F cafe, R 1.7.
+45. C mountain view, S n.shoreline blvd., F sandwiches, R 2.
+46. C san rafael, S simms st, F bakery, R 1.7.
+47. C daly city, S mission st, F donuts, R 1.7.
+48. C san jose, S n san pedro st, F cafe, R 1.8.
+49. C burlingame, S broadway, F japanese, R 1.7.
+50. Chatter dropped. C mountain view, S castro st, F asian, R 2.8.
+51. C hayward, S mission blvd, F pizza, R 1.7.
+52. Chatter dropped. C pinole, S san pablo ave # a, F deli, R 2.
+53. C pleasant hill, S contra costa blvd ste a, F pizza, R 2.
+54. Chatter dropped. C san francisco, S ocean ave, F cafe, R 1.5.
+55. Chatter dropped. C hayward, S 6th st, F bar, R 1.7.
+56. C fremont, S mission blvd, F donuts, R 1.7.
+57. Chatter dropped. C san francisco, S clement, F italian, R 2.
+58. C san francisco, S clement, F cafe, R 2.
+59. Chatter dropped. C concord, S clayton rd apt 7, F mexican, R 1.7.
+60. C san jose, S south market st, F continental, R 2.
+61. Chatter dropped. C mill valley, S "ave." (literal), F mexican, R 2.
+62. Chatter dropped. C south san francisco, S grand ave, F chinese, R 1.7.
+63. Chatter dropped. C ben lomond, S mill st, F mexican, R 2.
+64. Chatter dropped. C walnut creek, S candelero dr, F dessert, R 1.5.
+65. C san jose, S exp/riveroaks, F american, R 2.
+66. "What is the lifes greates illusion?" contains no database lookup. Because a query is still required, it gets a valid two-column query with `WHERE 1 = 0`, which returns no rows.
+67. Reg monterey, R 4.5.
+68. Reg sacramento area, R 2.
+69. Reg lake tahoe, R 2.3.
+70. Chatter dropped. Reg napa valley, R 2.
+71. C seaside, S buchanan.
+72. Chatter dropped. C banta, S alvarado blvd.
+73. Chatter dropped. C campbell, S town and country vlg.
+74. Chatter dropped. C orinda, S laurie meadows dr.
+75. C pacheco, S allston way.
+76. Chatter dropped. C sonora, S e capitol expy # 104.
+77. C campbell, S e. morehead.
+78. C los altos, S w 25th ave.
+79. C menlo park, S alvarado blvd.
+80. Chatter dropped. C concord, S scotts valley dr.
+81. Reg bay area, F basque, best (the subquery repeats the region join).
+82. Chatter dropped. Reg northern california, F lamb, best.
+83. Reg sacramento area, F hoffbrau, best.
+84. Chatter dropped. Reg yosemite and mono lake area, F yogurt, best.
+85. Reg napa valley, F brunch, best.
+86. Reg los angeles area.
+87. Reg bay area.
+88. Reg unknown ("in the unknown" is read as a region value).
+89. Reg northern california.
+90. Chatter dropped. Reg sacramento area.
+91. Reg napa valley.
+92. Reg sacramento area.
+93. Reg monterey.
+94. Reg lake tahoe.
+95. Reg yosemite and mono lake area.
+96. Reg bay area, F ethiopian, R 2.
+97. Chatter dropped. Reg los angeles area, F indian, R 3.
+98. Reg bay area, F moroccan, R 2.
+99. Reg northern california, F italian, R 2.
+100. Reg monterey, F bar, R 1.7.
+101. Reg monterey, F swiss, R 2.
+102. Reg bay area, F american, R 2.
+103. Chatter dropped. Reg bay area, F greek, R 4.5.
+104. Reg bay area, F dinner, R 2.
+105. Reg napa valley, F ice cream, R 1.7.
+106. Reg bay area, F latin, R 2.
+107. Reg bay area, F dinner, R 2.
+108. Chatter dropped. Reg napa valley, F bar, R 2.
+109. Reg bay area, F bulgarian, R 2.
+110. Reg bay area, F german, R 2.
+111. Reg bay area, F nouveau, R 3.5.
+112. Chatter dropped. Reg napa valley, F californian, R 2.3.
+113. Reg bay area, F dessert, R 2.
+114. Reg bay area, F hunan, R 3.
+115. Reg bay area, F vietnamese/louisiana, R 2.
+116. Reg bay area, F breakfast, R 2.
+117. Chatter dropped. Reg monterey, F swiss, R 2.
+118. Chatter dropped. Reg bay area, F venison, R 2.
+119. Chatter dropped. Reg bay area, F pizza, R 2.
+120. Reg monterey, F ice cream, R 1.7.
+121. C santa rosa, F yogurt, R 1.7.
+122. Chatter dropped. C mill valley, F "california" (as written, not "californian"), R 2.
+123. Chatter dropped. C richmond, F cafe, R 2.
+124. C walnut creek, F sandwiches, R 2.
+125. C yountville, F cafe, R 2.
+126. C vallejo, F catering, R 1.7.
+127. Chatter dropped. C pacheco, F chinese, R 4.5.
+128. C petaluma, F chinese, R 2.
+129. C los altos, F burgers, R 1.4.
+130. C san francisco, F american, R 2.
+131. C unknown ("in unknown" without "the" follows the city pattern), F thai, R 2.7.
+132. Chatter dropped. C saratoga, F chinese, R 1.7.
+133. C emeryville, F haitian, R 4.5.
+134. C ben lomond, F mexican, R 2.
+135. Chatter dropped. C emeryville, F french, R 2.
+136. Chatter dropped. C san carlos, F bread, R 1.8.
+137. C antioch, F thai, R 2.
+138. C moraga, F ice cream, R 1.7.
+139. C fairfield, F donuts, R 4.5.
+140. C milpitas, F vietnamese, R 3.3.
+141. C san lorenzo, F french, R 1.7.
+142. C berkeley, F mexican, R 2.
+143. C sunnyvale, F afghani, R 2.
+144. Chatter dropped. C alameda, F burgers, R 2.
+145. C aptos, F barbeque, R 1.8.
+146. C morgan hill, F steak, R 2.
+147. C castro valley, F coffee, R 2.
+148. Chatter dropped. C san jose, F spanish, R 2.
+149. C hollister, F american, R 2.
+150. C napa, F seafood, R 1.7.
+151. Chatter dropped. N burger pit steak house, C campbell.
+152. N roof top cafe, C palo alto.
+153. Chatter dropped. N azteca de oro restaurant, C castroville.
+154. N marys pizza shack, C san ramon.
+155. N bavarian corner, C la honda.
+
+## Output
+
+`restaurants_dataset_predictions.csv` has 155 rows in the original order, with the question text copied exactly and standard CSV quoting. I ran every query against an empty SQLite copy of the schema: all of them parse and return exactly two columns.
+
+Two judgment calls to be aware of:
+- **"in the unknown" vs "in unknown":** Q88 treats "unknown" as a region and Q131 treats it as a city, based on the wording.
+- **Q66:** it gets an always-empty query, since it isn't a database question.

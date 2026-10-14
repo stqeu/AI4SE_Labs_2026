@@ -1,0 +1,45 @@
+# CONTEXT
+You are given exactly two attached files:
+- restaurants-schema.csv: the schema of a restaurant database. Each row
+  lists a table name, field name, whether it is a primary key, whether it is
+  a foreign key, and its type. Rows of "-" only separate tables.
+- restaurants_questions.csv: 155 natural-language questions about
+  restaurants, one per row, in a column named "question".
+
+You do not have access to the database contents. The database will be loaded
+into SQLite using exactly the table and column names in the schema.
+LOCATION.RESTAURANT_ID references RESTAURANT.ID, and CITY_NAME links the
+RESTAURANT, LOCATION and GEOGRAPHIC tables.
+
+# OBJECTIVE
+For every question in restaurants_questions.csv, write one SQLite query that,
+when executed on this database, returns exactly the rows that answer the
+question. Every query must return exactly two columns, in this order:
+the restaurant's house number (LOCATION.HOUSE_NUMBER) and the restaurant's
+name (RESTAURANT.NAME).
+
+# STYLE
+Precise and technical, like an experienced database engineer. Use explicit
+JOINs and only the tables and columns that are needed. Use plain SQLite
+syntax. Take literal values (city names, street names, food types, rating
+thresholds) from the question exactly as written.
+
+# TONE
+Neutral and literal. Some questions contain irrelevant sentences about food,
+picnics or imaginary situations; ignore anything that does not describe what
+to look up. Do not add conditions the question does not ask for.
+
+# AUDIENCE
+The output will be read and executed automatically by an evaluation script,
+not by a human. Any query that fails to execute counts as wrong.
+
+# RESPONSE
+Use only the two attached files; do not open, search for or use any other
+files or sources.
+Return a single CSV file named restaurants_dataset_predictions.csv with
+exactly two columns: question,predicted_sql
+- One row per question, in the same order as restaurants_questions.csv, with
+  the question text copied exactly (including duplicate questions).
+- Use proper CSV quoting so commas and quotes inside fields don't break it.
+- Each predicted_sql is a single query with no comments.
+Output only the file, with no explanation.

@@ -1,0 +1,4 @@
+prompt,questions,accuracy,mean_precision,mean_recall,mean_f1,wrong_questions,mean_f1_on_wrong
+RTF,155,0.9484,0.9836,0.9871,0.9851,8,0.712
+CO-STAR,155,0.9935,0.9935,0.9935,0.9935,1,0.0
+CoT,155,0.9935,0.9935,0.9935,0.9935,1,0.0

@@ -1,0 +1,32 @@
+You translate natural-language questions into SQLite queries.
+
+Attached files (use only these two; do not open or use any other files):
+- restaurants-schema.csv: the schema of a restaurant database (table, field,
+  primary key, foreign key, type).
+- restaurants_questions.csv: 155 questions in a column named "question".
+
+You do not have access to the database contents, only the schema.
+Start by studying the schema: the tables, their keys and how they are linked
+(LOCATION.RESTAURANT_ID = RESTAURANT.ID; CITY_NAME links all three tables).
+
+Every query must return exactly two columns, in this order:
+LOCATION.HOUSE_NUMBER, RESTAURANT.NAME.
+
+Then, for EACH question, think step by step:
+1. Separate the part of the question that describes a database lookup from
+   any unrelated chatter, and ignore the chatter.
+2. List every filter the question implies (city, street, food type, rating
+   threshold, county or region) and the literal value for each, taken from
+   the question as written.
+3. Decide what words like "best", "some", "a restaurant" or "above X" mean
+   in terms of comparison, sorting or limiting.
+4. Decide which tables are needed and how to join them, making sure the
+   two required output columns are available.
+5. Write the query and check that it is valid SQLite, uses only table and
+   column names from the schema, and returns the two required columns.
+
+Output:
+First, your reasoning for each question, numbered in question order.
+Then a CSV file named restaurants_dataset_predictions.csv with the header
+question,predicted_sql, one row per question in the original order, with the
+question text copied exactly and proper CSV quoting.

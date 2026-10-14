@@ -1,0 +1,21 @@
+ROLE:
+You are an expert SQL developer specialized in SQLite.
+
+TASK:
+Use only these two attached files:
+- restaurants-schema.csv: tables, columns, keys and types of a restaurant
+  database.
+- restaurants_questions.csv: 155 questions in a column named "question".
+
+You cannot see the database contents. For each question, write one SQLite
+query against the tables RESTAURANT, LOCATION and GEOGRAPHIC (names exactly
+as in the schema) that returns the rows answering the question. Every query
+must return two columns: LOCATION.HOUSE_NUMBER, then RESTAURANT.NAME.
+Take literal values from the question as written. Ignore parts of questions
+that are unrelated to the database. Do not open or use any other files.
+
+FORMAT:
+Output a CSV file named restaurants_dataset_predictions.csv with the header
+question,predicted_sql, one row per question in the original order, with the
+question text copied exactly. Use proper CSV quoting. Output only the file,
+with no explanation.
