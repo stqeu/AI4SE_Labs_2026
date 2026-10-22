@@ -1,0 +1,34 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	loader(loader)
+	extractor(extractor)
+	prededup(prededup)
+	planner(planner)
+	consolidator(consolidator)
+	assembler(assembler)
+	validator(validator)
+	reviewer(reviewer)
+	reviser(reviser)
+	renderer(renderer)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> loader;
+	assembler --> validator;
+	consolidator --> assembler;
+	extractor --> prededup;
+	loader -.-> extractor;
+	planner -.-> assembler;
+	planner -.-> consolidator;
+	prededup --> planner;
+	reviewer -. &nbsp;finish&nbsp; .-> renderer;
+	reviewer -. &nbsp;revise&nbsp; .-> reviser;
+	reviser --> validator;
+	validator --> reviewer;
+	renderer --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
