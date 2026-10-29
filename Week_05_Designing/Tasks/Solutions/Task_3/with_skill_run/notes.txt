@@ -1,0 +1,93 @@
+NOT FAR(M) FROM HOME (NFFH) - ARCHITECTURE EXPLORATION NOTES
+==============================================================
+Scope given: small user base, student team of 3, ~3 months, low budget, web only.
+
+
+0. SYSTEM SUMMARY (exchange #1)
+Q (me): Use the architecture-exploration skill on NFFH.txt.
+- "Km 0" marketplace: farms (Agricultural Companies) list produce; Clients reserve it
+  and pick it up at the farm on a chosen day.
+- No payment and no delivery in the stories -> an "order" is a RESERVATION + pickup
+  date; money presumably changes hands at the farm.
+- Three roles: Client, Agricultural Company (farmer), Administrator.
+- Areas are admin-managed regions (35, 39); farms belong to an area; clients browse by area.
+- Only external integration: a Google Maps link (13). No email, payments, notifications
+  in scope.
+- Web only, small scale -> traffic and scaling are not the hard part; correctness of
+  stock, ownership checks and order lifecycle are.
+
+Roles -> capability groups (reused in every later section):
+  A. Accounts & sessions ........ 1-5 (client), 17-21 (farm), 22-24 (admin)
+  B. Discovery & catalogue ...... 6, 7, 8, 13
+  C. Cart & orders .............. 9, 10, 11, 12, 40, 41
+  D. Farm inventory ............. 14, 15, 16
+  E. Admin: users & companies ... 25, 27, 28, 29, 31, 32
+  F. Admin: catalogue, areas,
+     reporting .................. 26, 30, 33, 34, 35, 36, 37, 38, 39
+
+
+1. CANDIDATE ARCHITECTURES - OVERVIEW (exchange #1)
+Q (me): Propose 3 genuinely different architectures.
+Axis: how the backend is split, and who runs it.
+
+1a. Layered modular monolith
+  - One deployable app (+ one relational DB); code split into modules A-F; layers
+    controller -> service -> repository.
+  - First impression: natural fit for 3 people / 3 months; one DB transaction covers
+    "complete order + decrement stock".
+
+1b. Microservices behind an API gateway
+  - Separate services (Identity, Catalogue, Orders, Admin/Reporting), each with its
+    own DB; gateway does auth + routing.
+  - First impression: textbook-impressive but the key flow (order) crosses services
+    -> distributed consistency + lots of ops for a tiny team.
+
+1c. Serverless / BaaS (e.g. Supabase or Firebase + thin frontend + a few functions)
+  - Managed auth + DB; authorisation as DB rules (row-level security); custom logic
+    only where needed (complete order).
+  - First impression: fastest to a working demo, cheapest to host; risk = security
+    lives in rules that are easy to get subtly wrong; vendor lock-in.
+
+
+2. ADR DRAFTED (exchange #2)
+Q (me): Write the ADR from our notes.
+- ADR-001 drafted as a Claude Doc; status Proposed. Change log in adr_log.txt.
+- Chosen A (modular monolith) / runner-up C (serverless-BaaS) / rejected B (microservices).
+- Deep dives (Phase 3), comparison table (Phase 4) and scope choice (Phase 5) were
+  skipped; ADR ratings rest on §1 first impressions + given scope -> to be confirmed.
+- Decision made provisionally: server-side DB sessions (OI-5), stock decremented at
+  completion (OI-2), soft delete for referenced data (OI-6).
+
+
+OPEN ISSUES / TO DISCUSS LATER
+(Architecture / data-model changing first)
+[ ] OI-1  Multi-farm cart: can the cart hold products from several farms? If yes, is
+          checkout one order or split into one order per farm (each with its own pickup
+          date)? Pickup is per farm, so split seems implied.
+[ ] OI-2  Stock semantics: when is quantity decremented - add to cart, order completion,
+          or pickup? What restores it (cancel, no-show)? Needs atomic check-and-decrement.
+[ ] OI-3  Order lifecycle undefined: states (placed / confirmed / ready / picked up /
+          cancelled / no-show)? Can farm accept/reject? Can client cancel? (12, 40, 41)
+[ ] OI-4  Pickup date rules: farm opening days/hours, lead time, capacity per day -
+          data is missing from the stories.
+[ ] OI-5  Session strategy for "don't re-enter credentials" (3, 19, 23): server session
+          cookie vs JWT + refresh; how is a deleted/banned user (25) cut off immediately?
+[ ] OI-6  Deleting referenced data (15, 25, 38, 39): product/user/area with existing
+          orders -> soft delete / archive? What happens to open orders?
+[ ] OI-7  Price/quantity changes after an order (16, 37): snapshot price into order lines.
+[ ] OI-8  "Hot products" (6) undefined: seasonal flag set by farm? most ordered? by area?
+[ ] OI-9  "In my area" (7): client picks an area, or geolocation? Farm needs address +
+          coordinates for the Maps link (13).
+[ ] OI-10 Units & money: price per kg / per piece / per box; decimal quantities; currency.
+[ ] OI-11 Farm onboarding (17): self-registration live immediately, or admin approval?
+[ ] OI-12 Admin powers (29, 36-38): admin edits farm products/users - audit log needed?
+          How is the admin account created (seeded, no public registration)?
+[ ] OI-13 Personal info (5, 21): view only, or also edit / delete account (GDPR)?
+[ ] OI-14 Confirm payments, delivery, notifications are out of scope.
+[ ] OI-15 Data location / GDPR: EU users likely -> EU hosting region.
+[ ] OI-16 Scope details still missing: team experience/known stacks, what the work is
+          graded on, any compliance constraints (needed before Phase 5).
+          NOW REQUIRED: the ADR's security rationale depends on the framework choice.
+[ ] OI-17 Confirm or redo the ADR's Strong/Good/Weak ratings (no deep dives behind them).
+Provisional decisions (in ADR-001, confirm): OI-2 decrement at completion; OI-5 server-
+side DB sessions; OI-6 soft delete + FK RESTRICT.

@@ -1,0 +1,59 @@
+ADR-001 CHANGE LOG - Not Far(m) From Home
+=========================================
+
+UPDATE #1 - 2026-10-29 - First full draft of ADR-001
+----------------------------------------------------
+Why I asked for it:
+- I want a formal ADR choosing the NFFH architecture, written from our exploration notes.
+
+What changed in the ADR (new document, section-by-section outline):
+- TL;DR: Option A (layered modular monolith) chosen; 3 reasons (one transaction for
+  order + stock, fits 3 students / 3 months, reviewable server-side authorisation);
+  runner-up C (serverless/BaaS); B (microservices) rejected: "unneeded complexity".
+- Status: Proposed, pending team review; Nygard + MADR format; sources NFFH.txt, notes.txt.
+- Context: system summary, roles, capability groups A-F with story numbers, scope,
+  6 technical forces (stock consistency, ownership authorisation, revocable sessions,
+  safe deletes, admin reporting, team capacity).
+- Decision drivers: 6, in priority order - deliverability, data consistency, security
+  under inexperience, cost/operations, visible and testable design, evolvability/lock-in.
+- Considered options: A, B, C with Good/Bad lines; Strong/Good/Weak table against the
+  6 drivers (A is the only option with no Weak rating).
+- Decision: one-sentence decision incl. "rent the commodity parts"; component/layer
+  diagram (TENTATIVE until you confirm); 8 binding rules (modules, layers, auth,
+  sessions, authorisation, consistency, data rules, external integrations).
+- Rationale: why not B; why A over C per driver (security wording as claim + reasons +
+  condition + C's strength); what C does better and the middle path.
+- Consequences: positive, negative, 7 risks each with mitigation and verifying test,
+  incl. schedule risk (rule-heavy core first, admin CRUD 26-39 last).
+- Conditions to revisit: switch to C / move to B / revisit security claim.
+- Open issues: 16 items from notes.txt, 4 marked REQUIRED (stack, stock semantics,
+  session strategy, delete policy).
+
+Decisions/assumptions I made while drafting (please confirm):
+- The notes stop at the Phase 2 overview: no deep dives, comparison table or scope
+  choice were done. I chose A from the first impressions in notes.txt §1 plus your
+  scope; the status is therefore "Proposed".
+- All table ratings are mine, derived from those first impressions; they were not
+  argued in the notes. Please check each cell.
+- Arguments/rules added beyond the notes (taken from the exploration skill's standard
+  checklist, not from our discussion): architecture test in CI for module boundaries;
+  CSRF protection; SameSite=Lax cookie; seeded admin; 404 (not 403) for foreign
+  resources; NUMERIC(10,2) money; DATE pickup + timestamptz UTC; FK RESTRICT; Maps as
+  a plain URL with no API key; free-tier host smoke test in week 1.
+- Driver 5 (visible and testable design) assumes the work is graded on design and
+  testing - not yet confirmed (OI-16).
+- Binding rule 6 assumes stock is decremented at order completion (OI-2 still open).
+- Modules: groups E and F merged into one Admin module.
+
+Questions for review:
+1. Which backend framework / stack does the team know best? It fills the stack open
+   issue and makes the auth rule concrete.
+2. One ADR, or split follow-ups (stock semantics, sessions, delete policy) into
+   ADR-002, ADR-003 ...?
+3. Is the binding-rule detail level right, or should parts (SQL, cookie flags) move to a
+   design doc?
+4. Strong/Good/Weak ratings, or weighted numeric scores?
+5. Diagram: component/layer view only, or also the reservation-completion flow?
+6. Should we run the skipped deep dives / comparison first and re-derive the ratings,
+   or accept this draft's ratings?
+7. Is the work graded on design and testing (driver 5), or on a polished product?

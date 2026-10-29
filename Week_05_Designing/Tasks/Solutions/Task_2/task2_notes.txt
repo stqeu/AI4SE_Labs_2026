@@ -1,0 +1,112 @@
+NFFH - TASK 2 NOTES (ADR log)
+=============================
+Course: Software Engineering using AI
+ADR: "ADR-001: Architecture for Not Far(m) From Home" (Claude doc)
+
+UPDATE #1 - 2026-10-29 - ADR first draft created
+-------------------------------------------------
+Why I asked for it:
+- Turn the exploration in notes.txt (sections 0-10) into a formal Architecture
+  Decision Record that chooses an architecture for NFFH, in a standard format,
+  without diagrams or tables yet so I can review the text first.
+
+What changed in the ADR (new document, v1):
+- Format: Nygard-style ADR extended with MADR's "decision drivers" and
+  "considered options".
+- Status: Proposed, pending team review.
+- Context: system summary, 3 roles, 5 capability groups mapped to story numbers,
+  scope/constraints (small region, 3 students, ~3 months, low budget, web only),
+  technical forces (atomic stock, ownership authz, safe deletes, revocable
+  "remember me", inexperienced team).
+- Decision drivers (priority order): deliverability, security under
+  inexperience (fail closed), consistency, low cost/ops, visible+testable
+  design, evolvability.
+- Considered options: A modular monolith, B microservices, C serverless/BaaS,
+  each with a short description + good/bad.
+- Decision: A, "renting the boring parts" (managed Postgres + managed host +
+  framework security module). C = runner-up, B = rejected.
+  8 binding rules: modules, layers, auth via framework module, server-side
+  sessions + HttpOnly cookie + CSRF, service-layer role+ownership authz,
+  conditional UPDATE for stock + CHECK constraint, data rules (NUMERIC money,
+  price snapshot, DATE pickup, soft delete), Maps via lat/lng URL.
+- Rationale: why not B; why A over C (consistency, security wording from
+  notes section 10, course fit, cost/lock-in, evolvability); what C does better
+  and how renting the boring parts closes the gap.
+- Consequences: positive, negative, risks + mitigations (overselling, IDOR,
+  mass assignment, auth mistakes, schedule overrun).
+- Conditions to revisit: when to switch to C, when to move toward B, and that
+  the security claim depends on using the framework auth module.
+- Open issues (8 checklist items) carried over from notes section 2.
+
+Decisions/assumptions I made while drafting (please confirm):
+- Assumed "complete order" reserves stock immediately.
+- Proposed one order per farm for multi-farm carts (each with own pickup date).
+- Put "build the order/stock/authz core first, admin CRUD last" as a schedule
+  mitigation.
+
+Questions for review:
+1. Which backend framework does the team know best? (Fills the first open
+   issue and makes binding rule 3 concrete.)
+2. Should the ADR stay as one ADR, or should follow-ups (e.g. multi-farm
+   cart, session strategy) become separate ADRs (ADR-002, ADR-003...)?
+3. Is the level of implementation detail in "Decision" (binding rules) right,
+   or should some of it move to a later design document?
+
+UPDATE #2 - 2026-10-29 - Comparison table added
+------------------------------------------------
+Why I asked for it:
+- From a first glance it was hard to tell why A won; the options were only
+  described one by one in prose.
+
+What changed in the ADR:
+- New subsection "Options against the decision drivers" at the end of
+  "Considered options".
+- Table: rows = the 6 decision drivers (same order as the Decision drivers
+  section) + a Verdict row; columns = A, B, C.
+- Each cell = Strong / Good / Weak + a short reason, all taken from notes.txt
+  sections 6, 7, 9 and 10 (no new arguments added).
+- Lead sentence states the takeaway: A is the only option with no Weak rating
+  on the top three drivers; C wins on deliverability but is Weak on security;
+  B is Weak on four of six drivers.
+- Note: this is the first table in the ADR (earlier "no tables yet" rule lifted
+  by this request). Still no diagrams.
+
+Questions for review:
+4. Are the Strong / Good / Weak ratings acceptable, or would you prefer a
+   numeric score (e.g. 1-3 per driver, weighted by priority)? A weighted score
+   would make the win even more explicit but invites "why this weight?"
+   questions.
+
+UPDATE #3 - 2026-10-29 - Diagram, TL;DR, shorter option pros/cons
+-----------------------------------------------------------------
+Why I asked for it:
+- Diagram: wanted a picture of the chosen architecture (Claude's choice of
+  style; I'll decide whether to keep it).
+- TL;DR: a reader should get the decision without reading the whole ADR.
+- Shorter Good/Bad: the option descriptions repeated details that the
+  Rationale and the comparison table already cover.
+
+What changed in the ADR:
+- TL;DR paragraph added right under the byline: A chosen (modular monolith +
+  managed Postgres + framework security module), 3 reasons (one transaction,
+  fails closed, fits team/time/budget), C runner-up, B rejected.
+- Considered options: each Good/Bad shortened to one line each (2-3 points).
+  The longer arguments now live only in Rationale, Consequences and the table.
+- Diagram added in the Decision section, right after the decision sentence:
+  - Component/layer view: Browser (SPA) -> REST over HTTPS + session cookie ->
+    modular monolith on a managed app host -> one managed PostgreSQL.
+  - Inside the monolith: framework security module band (highlighted, since
+    the security claim depends on it) above 4 module columns (Auth/Users,
+    Areas, Catalog, Orders), each split into Controller / Service / Repository.
+  - One cross-module arrow: Orders service -> Catalog service via
+    reserveStock(), showing the "only through service interfaces" rule.
+  - Google Maps shown as an external, dashed box reached by a plain link.
+  - DB box notes: each module owns its tables, order + stock in one
+    transaction, CHECK (stock >= 0).
+  - One reading sentence under the diagram.
+- Note: first diagram in the ADR; marked as tentative until I review it.
+
+Questions for review:
+5. Keep the diagram as a component/layer view, or would a "complete order"
+   request flow (like the flowchart in notes.txt section 3) be more useful,
+   either instead or in addition?

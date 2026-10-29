@@ -1,0 +1,454 @@
+NOT FAR(M) FROM HOME (NFFH) - ARCHITECTURE EXPLORATION NOTES
+Course: Software Engineering using AI
+=============================================================
+
+0. SYSTEM SUMMARY (from NFFH.txt)
+---------------------------------
+- "km 0" platform connecting local farmers (Agricultural Companies) with consumers.
+- Farmers post produce; clients reserve it and choose a pickup day at the farm.
+- No delivery and no online payment mentioned -> "order" = reservation + pickup date.
+- 3 roles: Client, Agricultural Company (farmer), Administrator.
+- Main capability groups in the 41 user stories:
+  * Auth & session: register, login, stay logged in ("remember me"), logout, see own profile (all roles).
+  * Catalog/inventory: farmer CRUD on products; admin CRUD on products; "hot"/seasonal products.
+  * Geography: areas (admin add/delete/list), farms by area, open farm location in Google Maps.
+  * Cart & orders: add/remove/view cart, complete order with pickup date, see my orders (client + farmer), admin sees all orders.
+  * Admin/user management: list, view, modify, delete (malicious) users.
+
+(Architecture sections and open issues are added below as we go.)
+
+1. THE 3 CANDIDATE ARCHITECTURES (overview, exchange #1)
+--------------------------------------------------------
+They differ mainly in: how the backend is split, and who runs it.
+
+A. LAYERED MODULAR MONOLITH
+   - One deployable backend, internal modules (Auth, Catalog, Areas, Cart/Orders),
+     layers: controller -> service -> repository. One relational DB. REST API + SPA/SSR frontend.
+   - First impression: simplest to build/test/deploy; natural fit for this size.
+     [Browser] -> REST -> [Single backend: modules + layers] -> [PostgreSQL]
+
+B. MICROSERVICES + API GATEWAY
+   - Services: Identity, Catalog/Inventory, Orders, Geo/Areas; database per service.
+   - Gateway does routing + JWT validation; REST + async events via message broker
+     (e.g. OrderPlaced -> reserve stock).
+   - First impression: independent scaling/deploys, but you pay distributed-systems complexity.
+     [Browser] -> [Gateway] -> {Identity, Catalog, Orders, Geo} each with own DB, linked by broker
+
+C. SERVERLESS / BaaS (e.g. Supabase, Firebase)
+   - No self-run server. Managed auth + hosted DB with row-level security (RLS) + cloud
+     functions for trusted logic (completeOrder with atomic stock decrement, admin ops).
+   - Google Maps = simple link from farm lat/long.
+   - First impression: very little backend code, but authorisation lives in DB rules and
+     you are locked into the vendor.
+     [SPA] -> {Managed Auth, DB+RLS, Cloud Functions}
+
+3. DEEP DIVE - A. LAYERED MODULAR MONOLITH (exchange #2)
+--------------------------------------------------------
+Q (me): go through architecture A, with a flowchart first.
+Flowchart shown: "Complete order" request path:
+  Browser -> Auth middleware (401/403) -> Order controller (400 bad date)
+  -> Order service, BEGIN TX + stock check (409 out of stock)
+  -> Repositories -> one DB (insert order, decrement stock) -> COMMIT, 201.
+
+Structure
+- 1 codebase, 1 process, 1 DB. Cut 2 ways:
+  * vertical modules: auth/users | catalog | areas | orders (each owns its tables)
+  * horizontal layers: controller (HTTP, validation) -> service (rules, TX) -> repository (SQL)
+- Golden rule: modules talk only via service interfaces (orders calls catalog.reserveStock(),
+  never queries products table) -> "modular" monolith, not big ball of mud.
+- Stack example: Spring Boot / Django / NestJS + PostgreSQL; SPA or server-rendered UI.
+
+Benefits
+- One ACID transaction for order + stock decrement (hard in B!).
+- Simple deploy (1 artifact + 1 DB), cheap hosting, easy local dev.
+- Easy debugging (one stack trace) and integration testing.
+- Fast development/refactoring; right-sized for low regional traffic.
+
+Trade-offs
+- Scales as a whole unit (OK: a few replicas behind a load balancer).
+- Shared fate: one bug/leak can crash everything.
+- Every change = full redeploy; single tech stack.
+- Module boundaries enforced only by discipline (use ArchUnit / import lint rules).
+- Team scaling (not relevant for us).
+
+Difficult parts (design)
+1. Authorisation = ownership checks, not just roles (farmer edits only OWN products,
+   client sees only OWN orders) -> risk of IDOR bugs. Admin stories reuse same service
+   methods with different policy.
+2. Multi-farm cart -> probably split into one order per farm, each with own pickup date.
+   Decide early (changes data model).
+3. Deleting referenced data (area with farms, product in orders, user with open orders)
+   -> soft delete (deleted_at) + FK RESTRICT, not cascades.
+
+Painful low-level details
+- Race on last stock unit (overselling). Fixes:
+    UPDATE products SET stock = stock - :q WHERE id=:id AND stock >= :q  (check rows affected)
+    or SELECT ... FOR UPDATE, or optimistic locking (version column).
+- Snapshot unit_price into order_items (price changes must not rewrite old orders).
+- Money as NUMERIC/BigDecimal, never float; store unit (kg / piece / bunch).
+- "Remember me": server-side sessions + HttpOnly/Secure/SameSite cookie, hashed rotating
+  remember-me token. JWT alternative has revocation problem (deleted malicious user still valid).
+  Cookies -> handle CSRF.
+- Pickup date: store as DATE (timezone off-by-one), validate not past + farm open
+  (needs opening-hours model).
+- No-shows: scheduled job to release reserved stock (easy inside monolith, but don't forget).
+- Google Maps: store lat/lng, link https://www.google.com/maps/search/?api=1&query=LAT,LNG
+  (no API key). Pain = geocoding address at registration.
+- Hot products: aggregate query -> index or cache a few minutes.
+
+Verdict: honest default for NFFH; most pain points are solved by one transaction or one
+SQL statement, which stops being true in architecture B.
+
+4. DEEP DIVE - B. MICROSERVICES + API GATEWAY (exchange #3)
+-----------------------------------------------------------
+Q (me): continue with architecture B (flowchart first again).
+Flowchart shown: "Complete order" as a choreographed SAGA:
+  Browser -> API gateway (verify JWT; 401/403) -> Order service (save PENDING, reply 202)
+  -> Broker: OrderPlaced -> Catalog service (try reserve stock)
+  -> StockReserved => order CONFIRMED  |  StockRejected => order CANCELLED (both via broker).
+Key contrast with A: no shared DB transaction -> Orders must ASK Catalog by message
+and accept a late answer (eventual consistency).
+
+Structure (DB per service, nobody touches another's DB)
+- Identity: users, credentials, roles, tokens         (1-5, 17-25, 27-29)
+- Catalog/Inventory: products, stock, prices, hot     (6, 8, 14-16, 33-38)
+- Orders: carts, orders, items, pickup dates          (9-12, 26, 40, 41)
+- Geo/Areas: areas, farm locations, map links         (7, 13, 30-32, 35, 39)
+- Gateway: single entry, verifies JWT once, routes.
+- Sync REST/gRPC when an answer is needed now; async events (RabbitMQ/Kafka) for "X happened".
+
+Benefits
+- Independent deploys and scaling (Catalog read-heavy -> more replicas).
+- Fault isolation (Geo down != checkout down).
+- Tech freedom per service (e.g. PostGIS for Geo); team autonomy (main real-world reason).
+
+Trade-offs
+- No shared transactions -> sagas + eventual consistency.
+- Ops cost: ~4 services + 4 DBs + broker + gateway + monitoring; heavy local dev.
+- Network failures everywhere -> retries, timeouts, fallbacks.
+- Debugging needs correlation IDs + distributed tracing (OpenTelemetry).
+- Overkill for NFFH's size/team.
+
+Difficult parts (design)
+1. Boundaries: Agricultural Company is in Identity (login), Geo (location) and Catalog
+   (seller) -> each keeps its own view, shared farmId. Bad boundaries = chatty
+   "distributed monolith" (worst of both).
+2. Checkout saga: choreography (react to events) vs orchestration (Orders drives steps).
+   Every step needs a COMPENSATING action (multi-farm partial failure: release or partial?).
+3. Admin cross-service queries (26-28, 31, 33): API composition (slow/fragile) vs
+   reporting read model fed by events (CQRS).
+4. Delete malicious user -> UserDeleted event; each service reacts at own pace.
+
+Painful low-level details
+- Dual-write problem (save order + publish event, crash in between) -> TRANSACTIONAL
+  OUTBOX: event row in same DB TX, relay publishes later.
+- At-least-once delivery -> duplicates -> IDEMPOTENT consumers (processed_messages table).
+- Event ordering -> event version numbers / Kafka partition by productId.
+- User sees PENDING (202) -> UI polls or WebSockets; worse UX than A.
+- Data duplication: Orders stores its own snapshot of product name, price, farm, address.
+- JWT revocation: gateway doesn't call Identity -> short-lived access tokens (5-15 min)
+  + refresh tokens + Redis denylist.
+- Service-to-service trust: forward user JWT or mTLS / service tokens.
+- Event schema evolution: versioning, backward-compatible changes, contract tests (Pact).
+- No cross-DB foreign keys: deleting an area in Geo can orphan farms -> check-before-delete
+  call or AreaDeleted event with defined reaction.
+- "Last kilo" race still exists, just inside Catalog (same conditional UPDATE as in A).
+  Microservices ADD distributed problems on top; they don't remove local ones.
+
+Verdict: great for learning distributed patterns (saga, outbox, idempotency, eventual
+consistency); poor fit for NFFH's size. A clean modular monolith (A) is what you'd later
+split into these services if the platform grew.
+
+5. DEEP DIVE - C. SERVERLESS / BaaS (exchange #4)
+-------------------------------------------------
+Q (me): go through architecture C (flowchart first), I'll have questions afterwards.
+Example provider: Supabase (managed Postgres + auth + storage + edge functions);
+Firebase noted as NoSQL alternative.
+Flowchart shown: "Complete order":
+  SPA -> Managed auth (SDK attaches JWT; 401) -> completeOrder function = OUR code
+  (check pickup date; 400) -> Managed Postgres TX decrement stock (409 out of stock)
+  -> Row-level security (only owner reads order) -> 201, UI updates.
+  Legend: purple = managed by provider, teal = code you write.
+KEY INSIGHT: most requests (browse, cart, farmer edits inventory) go browser -> DB
+DIRECTLY, guarded only by RLS. One DB again -> real transaction, no saga (unlike B).
+
+Structure
+- Auth stories (1-4, 17-20, 22-24): built-in, nearly free.
+- Simple CRUD (5, 8-11, 14-16, 21, 30, 33-41): direct SDK calls + RLS.
+- Trusted logic (12 complete order, 25 delete user, 29 modify user): edge/Postgres functions.
+- Computed (6 hot products, 26-27, 31 stats): SQL views / materialised views.
+- Maps (13): lat/lng + URL, same as A.
+- "Backend" = SQL migrations (tables, RLS, views, triggers) + a few functions.
+
+Benefits
+- Fastest to a working product; ~1/3 of stories (auth) done for us.
+- No servers; cheap tiers fit NFFH.
+- Postgres -> same transactional safety as A.
+- Extras: realtime (live farmer order list), storage (product photos), pg_cron (no-shows).
+- Small-team friendly.
+
+Trade-offs
+- Vendor lock-in (Supabase open source/self-hostable; Firebase stickier).
+- Business logic scattered: frontend + RLS + triggers + functions.
+- Platform limits: timeouts, cold starts, connections, pricing.
+- Security by configuration: missing rule can fail OPEN.
+
+Difficult parts (design)
+1. Direct vs function: multi-row consistency, money/stock, other users' data -> function.
+   (add to cart = direct; complete order = function)
+2. All authorisation as policies, e.g.
+     create policy ... on products for update using (seller_id = auth.uid())
+       with check (seller_id = auth.uid());
+   select/insert/update/delete x client/farmer/admin for every table.
+3. Roles as JWT custom claims -> role change only effective after token refresh.
+4. Firebase/Firestore: no joins -> denormalise, design collections around queries.
+
+Painful low-level details
+- RLS not enabled on a table = open to anyone with the public anon key (shipped in JS).
+  Enable RLS + default deny in every migration.
+- RLS is row-level, not column-level: farmer could change seller_id, client could set
+  status=COMPLETED -> WITH CHECK, column grants, triggers.
+- Never trust client: totals/prices/stock computed in function/DB.
+- Service role key bypasses RLS -> must never reach frontend/public repo.
+- SDK stores refresh token in localStorage -> XSS = stolen session (weaker than A's
+  HttpOnly cookie) -> strict CSP.
+- Delete malicious user = auth user + profile/products/orders -> admin-only function.
+- Cold starts on idle functions.
+- Firebase bills per document read -> cache/precompute hot products.
+- Dashboard click-ops drift -> everything as migrations in git, local emulator.
+- Test RLS by logging in as each role and attempting forbidden operations.
+- GDPR: choose EU region.
+
+Verdict: likely FASTEST way to deliver NFFH with a small team, keeps A's transactions
+(with Postgres). Trade: code you control -> configuration you must get exactly right;
+security becomes a DB-policy problem; vendor dependency.
+
+6. COMPARISON TABLE A / B / C (exchange #5)
+-------------------------------------------
+Q (me): I have a rough understanding of all 3; asked for a brief comparison table on
+implementation benefits, running benefits, implementation drawbacks, running drawbacks.
+
+1. IMPLEMENTATION BENEFITS
+   A: simplest model; one ACID TX (order + stock); easy refactoring + integration tests;
+      one stack.
+   B: small focused services; independent teams; tech choice per service; boundaries
+      enforced physically.
+   C: least code; auth/sessions/refresh free; one Postgres TX like A; storage, realtime,
+      cron built in; quickest to working product.
+2. RUNNING BENEFITS
+   A: 1 artifact + 1 DB; cheap; one stack trace; easy local dev; enough for NFFH traffic.
+   B: scale hot parts independently; fault isolation; deploy one service at a time.
+   C: no servers; cheap/free tiers; provider handles uptime/backups; auto-scaling.
+3. IMPLEMENTATION DRAWBACKS
+   A: boundaries only by discipline; must write auth/sessions/CSRF yourself;
+      big-ball-of-mud risk.
+   B: sagas + compensation; outbox; idempotent consumers; event versioning/contract
+      tests; duplicated data; admin queries need composition/read model; heavy local setup.
+   C: authorisation = RLS policies (fail open if forgotten); not column-level; scattered
+      logic; harder RLS testing; vendor-specific APIs.
+4. RUNNING DRAWBACKS
+   A: scales only as a whole; shared fate; full redeploy per change.
+   B: many moving parts (~4 services, 4 DBs, broker, gateway); tracing/monitoring;
+      eventual consistency (PENDING); JWT revocation; network failures; overkill.
+   C: vendor lock-in; limits/cold starts; pricing surprises (Firebase per-read);
+      localStorage tokens (XSS); environment drift; EU region for GDPR.
+
+One-line summary: A = safe default to build and run; B = pays a lot for scaling and
+autonomy NFFH doesn't need yet; C = fastest to build, but trades code you control for
+configuration you must get exactly right.
+
+7. CHOOSING FOR A CONCRETE SCOPE (exchange #6)
+----------------------------------------------
+Q (me): scope = small region, few hundred clients, dozens of farms; student team of 3,
+~3 months, low hosting budget, web app only. Isn't A the most logical choice?
+
+A: MOSTLY YES - A is correct and defensible, but NOT the only logical answer.
+   C is a serious competitor; B is clearly wrong.
+
+Why B is out
+- Tiny traffic -> independent scaling worthless.
+- Costs hit exactly our constraints: 3 people running services/sagas/broker/tracing;
+  4 services + 4 DBs + broker doesn't fit a low budget.
+
+Why A wins (my assumption holds)
+- Course goal = understanding architecture; A makes design VISIBLE (modules, layers,
+  interfaces, transactions, testable rules). In C it disappears into config/RLS.
+- All rules in one testable codebase.
+- Safer defaults: HttpOnly cookies vs localStorage; auth as code, not fail-open policies.
+- No lock-in; cheap (1 small server/app host + 1 Postgres).
+- Future-proof: clean modular monolith -> can split into B later.
+
+Where C beats A on our constraints
+- Time: ~1/3 of stories (auth) free in 3 months.
+- Budget/ops: free tiers fit; no "server person" needed.
+- Frontend-heavy team -> lower risk of not finishing.
+- Caveat: free-tier limits (e.g. Supabase pauses inactive free projects -> demo risk).
+
+What would flip the decision
+- A: a teammate knows a backend framework + grade values design/testing (likely us).
+- C: priority = polished feature-complete app, frontend-heavy team, comfortable with RLS.
+- Middle path: A but rent the boring parts (managed Postgres + framework's auth library).
+
+VERDICT: A, C strong runner-up, B ruled out.
+Report tip: argue "A fits OUR constraints, and here is what would make us pick C" -
+show the trade-off reasoning, not just "A is best".
+
+8. Q&A: CONDITIONAL UPDATE vs READ-THEN-WRITE (A, exchange #7)
+--------------------------------------------------------------
+Q (me): explain UPDATE ... WHERE stock >= :q again. Why is reading the stock first and
+then updating it in code not safe?
+
+The unsafe version ("check-then-act"):
+    stock = SELECT stock FROM products WHERE id = 7      -- reads 2
+    if stock >= q: UPDATE products SET stock = :newValue -- writes stock - q from code
+- The gap between the READ and the WRITE is the problem. The value you checked can be
+  stale by the time you write.
+
+Timeline (stock = 2 kg, Anna and Ben each order 2 kg at the same moment):
+    t1  Anna reads stock = 2      t2  Ben reads stock = 2
+    t3  Anna: 2 >= 2 OK           t4  Ben: 2 >= 2 OK
+    t5  Anna writes stock = 0     t6  Ben writes stock = 0
+    -> 2 orders, 4 kg sold, 2 kg exist. Ben's write overwrote Anna's (LOST UPDATE).
+    Variant with SET stock = stock - :q from code -> stock goes to -2.
+- Why it happens even in a monolith: the web server handles requests on many threads
+  at once (and maybe several app replicas). Concurrency is normal, not exotic.
+- A plain BEGIN/COMMIT does NOT fix it: Postgres default isolation is READ COMMITTED,
+  so both transactions can read 2 before either commits.
+- In-code locks (synchronized / mutex) don't fix it either: only work inside one process;
+  break as soon as there are 2 replicas.
+
+The safe version (one atomic statement):
+    UPDATE products SET stock = stock - :q
+    WHERE id = :id AND stock >= :q;
+    -> check rows affected: 1 = reserved, 0 = not enough stock -> 409
+- Check and change happen INSIDE the DB in ONE statement; no gap to exploit.
+- Ben's UPDATE waits on the row lock held by Anna's; after Anna commits, Postgres
+  RE-EVALUATES the WHERE against the new value (0 >= 2 false) -> 0 rows -> 409 for Ben.
+- Bonus: DB CHECK (stock >= 0) constraint as a safety net against any future bug.
+
+Alternatives (same idea: make check + write indivisible)
+- Pessimistic: SELECT ... FOR UPDATE locks the row, then read/check/update in code.
+  Good when logic is too complex for one WHERE. Keep TX short; lock rows in a fixed
+  order (e.g. by product id) to avoid deadlocks in multi-product carts.
+- Optimistic: version column; UPDATE ... WHERE id=:id AND version=:v; 0 rows -> retry.
+  Good when conflicts are rare.
+- SERIALIZABLE isolation: DB detects the conflict and aborts one TX -> must retry.
+
+Multi-product cart: run the conditional UPDATE per item inside ONE transaction;
+if any item returns 0 rows -> ROLLBACK the whole order.
+
+Testing: unit tests won't catch it; fire N parallel checkout requests against a real
+DB (integration test) and assert stock never goes negative / orders <= stock.
+
+9. Q&A: IS C MORE PRONE TO ACCIDENTAL DATA LEAKS? (exchange #8)
+---------------------------------------------------------------
+Q (me): at first glance C seems more prone to accidental data leaks - what could happen?
+
+A: YES, for ACCIDENTAL leaks. Not because BaaS is insecure, but defaults are reversed:
+- A = closed by default: data reachable only via endpoints you wrote; DTO picks fields.
+  Forget something -> data stays hidden.
+- C = open by default: every table is already an API callable from the browser with the
+  public anon key. Forget a rule -> data exposed. Mistakes of omission = leaks.
+
+Concrete NFFH examples
+1. New table without RLS (e.g. order_notes with phone numbers) -> anyone runs
+   select('*') from DevTools, no login needed.
+2. Row policy OK but columns leak: "authenticated can read profiles" (to show farms)
+   also returns clients' email/phone/address. UI looks fine, network response doesn't.
+3. PRIVILEGE ESCALATION: role stored in profiles + "users update own profile" ->
+   update({role:'admin'}) -> full admin (25, 26, 28). Worst case.
+4. Column writes on own rows: client sets status=COMPLETED / changes quantity;
+   farmer changes seller_id. Policy checks WHICH ROW, not WHICH COLUMN.
+5. Admin view (26, 31) runs with creator's rights -> bypasses RLS -> all orders public.
+   Fix: security_invoker = true (Supabase advisor flags it).
+6. RPC function get_user_details() without is-admin check -> anyone looks up any user.
+7. Service role key (bypasses RLS) put in VITE_/NEXT_PUBLIC_ env var or committed to
+   GitHub -> whole DB open; bots scan GitHub within minutes.
+8. Public storage bucket reused for private docs (business registration).
+9. Realtime subscription on orders without RLS -> everyone receives everyone's orders.
+10. Firebase "test mode" rules (allow read, write until <date>) shipped to production.
+
+Fair to A: same bug TYPES exist - IDOR (missing ownership check), MASS ASSIGNMENT
+(binding {"role":"admin"} from request body = A's version of #3). Difference = surface:
+A secures endpoints you wrote; C must secure every table, column, view, function,
+bucket and channel, and anything forgotten defaults to OPEN.
+
+Defending C
+- Default deny: enable RLS in every migration; run Supabase security advisor.
+- Sensitive data (phone, address) in separate table / private schema, not exposed.
+- role in auth app_metadata (not user-editable), not in profiles; column grants
+  (grant update (pickup_date)) or triggers for other columns.
+- Views: security_invoker = true; functions: check is_admin() inside +
+  revoke execute from anon.
+- Select explicit columns (convenience, NOT security).
+- Per-role tests: client / farmer / anonymous attempt forbidden reads + writes.
+- Secret scanning; team rule: only anon key in frontend env vars.
+
+Report takeaway: C isn't less secure in theory, but its FAILURE MODE IS "OPEN" -
+security depends on configuration being COMPLETE, not code being correct. Small team +
+deadline = forgotten config -> another argument for A in our scope.
+
+10. Q&A: CAN WE CLAIM A IS SAFER FOR AN INEXPERIENCED TEAM? (exchange #9)
+------------------------------------------------------------------------
+Q (me): does it make sense to claim A is the safer option security-wise when the team
+lacks real experience with these architectures?
+
+A: YES, DEFENSIBLE - but word it precisely + attach ONE CONDITION.
+Key idea: for an inexperienced team, judge by WHAT HAPPENS WHEN YOU MAKE MISTAKES,
+not by how secure each is when done perfectly.
+
+Why the claim holds
+- Failure mode: A forgotten rule -> feature doesn't work (no endpoint / 403) = visible bug.
+  C forgotten rule -> data exposed = silent leak.
+- Attack surface: A = endpoints you wrote; C = every table/column/view/function/bucket/channel.
+- Reviewability: A authz = code in one service layer (PR review); C = scattered SQL policies,
+  grants, triggers, dashboard settings.
+- Testability: A uses familiar unit/integration tests; C needs per-role forbidden-query tests.
+- Familiarity: endpoint + check user + DTO is known; DB-enforced security is a new mental model.
+
+Where it BREAKS (A riskier than C)
+- AUTHENTICATION: C gives battle-tested login, hashing, refresh, reset, verification.
+  Hand-rolled auth in A -> classic mistakes: SHA-256 instead of bcrypt/argon2, predictable /
+  non-expiring reset tokens, no CSRF, sessions not invalidated, no login rate limiting.
+- Running a server: patching, secrets, TLS, DB port not exposed (C handles this).
+=> CONDITION: A is safer ONLY IF we use the framework's security module (Spring Security,
+   Django auth, ASP.NET Identity, Passport/NestJS guards) + managed host/DB
+   (= "rent the boring parts", section 7).
+
+B: riskiest for inexperienced team - everything in A + service-to-service auth, JWT
+revocation, broker credentials, more secrets, more exposed components.
+
+Report wording (avoid "A is more secure"):
+  "Given a team with limited experience, we consider Architecture A the lower-risk option
+  from a security perspective. Its failure mode is closed: a missing authorisation rule
+  results in a denied or missing feature rather than exposed data. Its attack surface is
+  limited to explicitly implemented endpoints, and its authorisation logic is code that can
+  be reviewed and tested with familiar techniques. This holds on the condition that
+  authentication is implemented with the framework's established security module rather than
+  custom code. Architecture C provides stronger authentication out of the box, but its
+  open-by-default data access means that configuration omissions lead directly to data
+  exposure."
+Structure = claim + reasons + condition + acknowledge alternative's strength.
+
+2. OPEN ISSUES / TO DISCUSS LATER
+---------------------------------
+- Order semantics: does "complete order" reserve stock immediately? What happens if the
+  client doesn't show up for pickup? (Affects all 3 architectures, hardest in B.)
+- "Hot products": how is it defined? (season tag set by farmer? most ordered? admin-curated?)
+- "Farms in my area": admin-defined areas vs. geolocation/distance?
+- Can a cart contain products from several farms? (-> one order per farm / per pickup date?)
+- "Stay logged in": session cookie vs. JWT + refresh token.
+- No-show policy: how long is reserved stock held before release?
+- Farm opening hours: needed to validate pickup dates -> not in user stories yet.
+- (B) Saga with multi-farm cart: on partial stock failure, cancel everything or confirm
+  the farms that succeeded?
+- (B) Where does the Agricultural Company "live"? Proposed: split views keyed by farmId.
+- (B) Choreography vs orchestration for checkout - not decided.
+- (C) Supabase (Postgres) vs Firebase (NoSQL) - assumed Supabase; not formally decided.
+- (C) Which operations go direct-to-DB vs through functions - rule of thumb given,
+  full list not done.
+- Comparison table done (section 6). Tentative choice: A (section 7).
+- To confirm for A: team's backend framework/stack, and whether to use managed Postgres
+  + an auth library ("rent the boring parts").
+  -> Now REQUIRED, not optional: the security claim for A (section 10) depends on using
+     the framework's auth module instead of hand-rolled auth.

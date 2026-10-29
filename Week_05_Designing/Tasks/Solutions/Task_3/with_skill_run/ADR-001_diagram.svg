@@ -1,0 +1,64 @@
+<svg viewBox="0 0 760 640" xmlns="http://www.w3.org/2000/svg" font-family="Inter, DejaVu Sans, sans-serif" font-size="13" role="img" aria-label="One app, one database: a reservation and its stock change commit together">
+<defs>
+<marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#b3b0a6"/></marker>
+<marker id="c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#e5673b"/></marker>
+</defs>
+<g fill="#1f1f1f">
+<text x="24" y="32" font-size="15" font-weight="600">One app, one database: a reservation and its stock change commit together</text>
+</g>
+<!-- browser + maps -->
+<rect x="180" y="52" width="320" height="56" rx="8" fill="none" stroke="#b3b0a6" stroke-width="1.25"/>
+<text x="340" y="76" text-anchor="middle" font-weight="600" fill="#1f1f1f">Browser (web only)</text>
+<text x="340" y="96" text-anchor="middle" fill="#1f1f1f">Client · Farm · Admin</text>
+<rect x="540" y="52" width="196" height="56" rx="8" fill="none" stroke="#b3b0a6" stroke-width="1.25" stroke-dasharray="5 4"/>
+<text x="638" y="76" text-anchor="middle" font-weight="600" fill="#1f1f1f">Google Maps</text>
+<text x="638" y="96" text-anchor="middle" fill="#1f1f1f">plain link (story 13)</text>
+<g fill="none" stroke="#b3b0a6" stroke-width="1.25">
+<path d="M500 80H540" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<path d="M340 108V148" marker-end="url(#a)"/>
+<path d="M380 468V500" marker-end="url(#a)"/>
+</g>
+<text x="352" y="133" font-size="11.5" fill="#6b6b6b">HTTPS · HttpOnly session cookie</text>
+<!-- app container -->
+<rect x="24" y="148" width="712" height="320" rx="8" fill="none" stroke="#b3b0a6" stroke-width="1.25"/>
+<text x="40" y="172" font-weight="600" fill="#1f1f1f">Deployable app (one unit, one codebase)</text>
+<rect x="40" y="184" width="680" height="52" rx="8" fill="#e4edf9" stroke="#2f74d0" stroke-width="2"/>
+<text x="380" y="206" text-anchor="middle" font-weight="600" fill="#1f1f1f">Security layer: framework security module</text>
+<text x="380" y="225" text-anchor="middle" font-size="11.5" fill="#1f1f1f">login · sessions stored in DB · CSRF · deny-by-default roles</text>
+<g font-size="11.5" fill="#6b6b6b">
+<text x="40" y="319">controller</text><text x="40" y="357">service</text><text x="40" y="395">repository</text>
+</g>
+<g fill="none" stroke="#b3b0a6">
+<rect x="128" y="252" width="104" height="166" rx="8" stroke-width="1.25"/><rect x="250" y="252" width="104" height="166" rx="8" stroke-width="1.25"/><rect x="372" y="252" width="104" height="166" rx="8" stroke-width="1.25"/><rect x="494" y="252" width="104" height="166" rx="8" stroke-width="1.25"/><rect x="616" y="252" width="104" height="166" rx="8" stroke-width="1.25"/>
+</g>
+<g fill="#f1f0ec" stroke="#d6d3cb" stroke-width="1">
+<rect x="136" y="300" width="88" height="30" rx="6"/><rect x="136" y="338" width="88" height="30" rx="6"/><rect x="136" y="376" width="88" height="30" rx="6"/>
+<rect x="258" y="300" width="88" height="30" rx="6"/><rect x="258" y="338" width="88" height="30" rx="6"/><rect x="258" y="376" width="88" height="30" rx="6"/>
+<rect x="380" y="300" width="88" height="30" rx="6"/><rect x="380" y="338" width="88" height="30" rx="6"/><rect x="380" y="376" width="88" height="30" rx="6"/>
+<rect x="502" y="300" width="88" height="30" rx="6"/><rect x="502" y="338" width="88" height="30" rx="6"/><rect x="502" y="376" width="88" height="30" rx="6"/>
+<rect x="624" y="300" width="88" height="30" rx="6"/><rect x="624" y="338" width="88" height="30" rx="6"/><rect x="624" y="376" width="88" height="30" rx="6"/>
+</g>
+<g text-anchor="middle">
+<text x="180" y="274" font-weight="600" fill="#1f1f1f">Accounts</text><text x="180" y="290" font-size="11.5" fill="#6b6b6b">A · 1–5, 17–24</text>
+<text x="302" y="274" font-weight="600" fill="#1f1f1f">Catalogue</text><text x="302" y="290" font-size="11.5" fill="#6b6b6b">B · 6–8, 13</text>
+<text x="424" y="274" font-weight="600" fill="#1f1f1f">Orders</text><text x="424" y="290" font-size="11.5" fill="#6b6b6b">C · 9–12, 40–41</text>
+<text x="546" y="274" font-weight="600" fill="#1f1f1f">Inventory</text><text x="546" y="290" font-size="11.5" fill="#6b6b6b">D · 14–16</text>
+<text x="668" y="274" font-weight="600" fill="#1f1f1f">Admin</text><text x="668" y="290" font-size="11.5" fill="#6b6b6b">E, F · 25–39</text>
+</g>
+<path d="M468 353H502" fill="none" stroke="#e5673b" stroke-width="2" marker-end="url(#c)"/>
+<text x="485" y="442" text-anchor="middle" font-size="11.5" fill="#1f1f1f">Orders calls Inventory only through its service interface</text>
+<text x="392" y="489" font-size="11.5" fill="#6b6b6b">SQL, one transaction per reservation</text>
+<rect x="190" y="500" width="380" height="88" rx="8" fill="none" stroke="#b3b0a6" stroke-width="1.25"/>
+<g text-anchor="middle" fill="#1f1f1f">
+<text x="380" y="524" font-weight="600">Managed PostgreSQL (EU region)</text>
+<text x="380" y="540">CHECK (qty ≥ 0) · NUMERIC(10,2) money</text>
+<text x="380" y="556">foreign keys RESTRICT · soft delete</text>
+<text x="380" y="572">sessions table, deleted on user ban</text>
+</g>
+<rect x="24" y="604" width="16" height="12" rx="2" fill="#e4edf9" stroke="#2f74d0" stroke-width="1.5"/>
+<text x="48" y="614" font-size="11.5" fill="#6b6b6b">security layer the rationale depends on</text>
+<rect x="300" y="604" width="16" height="12" rx="2" fill="none" stroke="#b3b0a6" stroke-width="1.25" stroke-dasharray="3 2"/>
+<text x="324" y="614" font-size="11.5" fill="#6b6b6b">external service, not built by us</text>
+<line x1="540" y1="610" x2="560" y2="610" stroke="#e5673b" stroke-width="2"/>
+<text x="568" y="614" font-size="11.5" fill="#6b6b6b">cross-module call</text>
+</svg>
