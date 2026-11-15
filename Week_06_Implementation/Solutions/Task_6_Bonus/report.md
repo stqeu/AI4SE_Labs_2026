@@ -25,7 +25,6 @@ A better approach combines several kinds of retrieval:
 **A fixed number is the wrong unit; a token budget is better.** Top-5 was sometimes too little (the dependency was missing) and sometimes contained near-duplicates (5 other `Money` methods for `Money.__bool__`).
 
 - **Small repository** (like this one, ~81k tokens): put the whole repo into the prompt, no retrieval needed. Nothing can be "not found".
-- **Large repository:** fill a budget (e.g. 20–30k tokens) in priority order: target file → dependencies → tests → similar code. Remove near-duplicates so the budget is not wasted.
 
 ### Should the chunking be more sophisticated?
 
