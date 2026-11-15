@@ -1,0 +1,60 @@
+playground/playground/enums.py :: OrderStatus.is_terminal
+    0.775  [class_skeleton] playground/playground/enums.py::class_skeleton::OrderStatus
+    0.681  [test] playground/tests/test_enums.py::test::OrderStatusTests.test_cancelled_is_terminal
+    0.674  [test] playground/tests/test_enums.py::test::OrderStatusTests.test_new_is_not_terminal
+    0.642  [method] playground/playground/orders.py::method::Order.advance
+    0.633  [test] playground/tests/test_enums.py::test::OrderStatusTests.test_shipped_is_terminal
+playground/playground/inventory.py :: InventoryLedger.__contains__
+    0.768  [method] playground/playground/inventory.py::method::InventoryLedger.__len__
+    0.766  [method] playground/playground/inventory.py::method::InventoryLedger.available
+    0.761  [method] playground/playground/inventory.py::method::InventoryLedger.__iter__
+    0.761  [method] playground/playground/inventory.py::method::InventoryLedger.add_stock
+    0.748  [method] playground/playground/inventory.py::method::InventoryLedger._require_sku
+playground/playground/inventory.py :: Warehouse.stock_report
+    0.751  [method] playground/playground/inventory.py::method::Warehouse.receive
+    0.702  [module] playground/playground/inventory.py::module::inventory
+    0.690  [method] playground/playground/inventory.py::method::InventoryLedger.available
+    0.678  [method] playground/playground/inventory.py::method::InventoryLedger.add_stock
+    0.673  [class_skeleton] playground/playground/inventory.py::class_skeleton::Warehouse
+playground/playground/orders.py :: OrderStateMachine.transition
+    0.856  [method] playground/playground/orders.py::method::OrderStateMachine.can_transition
+    0.808  [method] playground/playground/orders.py::method::Order.advance
+    0.781  [method] playground/playground/orders.py::method::OrderStateMachine.__call__
+    0.725  [class_skeleton] playground/playground/orders.py::class_skeleton::OrderStateMachine
+    0.713  [method] playground/playground/orders.py::method::OrderStateMachine.allowed_from
+playground/playground/orders.py :: OrderLog.by_status
+    0.806  [method] playground/playground/orders.py::method::Order.status
+    0.734  [method] playground/playground/orders.py::method::OrderLog.__iter__
+    0.732  [method] playground/playground/orders.py::method::OrderLog.__getitem__
+    0.720  [method] playground/playground/orders.py::method::OrderLog.__init__
+    0.708  [class_skeleton] playground/playground/orders.py::class_skeleton::OrderLog
+playground/playground/models.py :: Customer.can_afford
+    0.797  [method] playground/playground/models.py::method::Customer.charge
+    0.765  [method] playground/playground/models.py::method::Customer.credit_limit
+    0.706  [test] playground/tests/test_models.py::test::CustomerTests.test_can_afford_false_over_limit
+    0.701  [test] playground/tests/test_models.py::test::CustomerTests.test_can_afford_accounts_for_existing_balance
+    0.698  [test] playground/tests/test_models.py::test::CustomerTests.test_can_afford_true_within_limit
+playground/playground/orders.py :: Order.__len__
+    0.869  [method] playground/playground/orders.py::method::OrderBuilder.__len__
+    0.751  [method] playground/playground/orders.py::method::Order.items
+    0.751  [method] playground/playground/orders.py::method::Order.__iter__
+    0.746  [method] playground/playground/orders.py::method::OrderLog.__len__
+    0.681  [method] playground/playground/orders.py::method::OrderBuilder.__bool__
+playground/playground/pricing.py :: BulkDiscountPricing.price
+    0.798  [method] playground/playground/pricing.py::method::BulkDiscountPricing.threshold
+    0.796  [method] playground/playground/pricing.py::method::BulkDiscountPricing.percent_off
+    0.794  [method] playground/playground/pricing.py::method::BulkDiscountPricing.__repr__
+    0.751  [class_skeleton] playground/playground/pricing.py::class_skeleton::BulkDiscountPricing
+    0.747  [test] playground/tests/test_pricing.py::test::BulkDiscountPriceTests.test_below_threshold_returns_base_total
+playground/playground/events.py :: EventBus.__contains__
+    0.760  [method] playground/playground/events.py::method::EventBus.__init__
+    0.695  [method] playground/playground/events.py::method::EventBus.subscribe
+    0.691  [method] playground/playground/events.py::method::EventBus.__len__
+    0.680  [method] playground/playground/events.py::method::EventBus.unsubscribe
+    0.665  [test] playground/tests/test_events.py::test::EventBusContainsTests.test_contains_false_without_handlers
+playground/playground/models.py :: Money.__bool__
+    0.809  [method] playground/playground/models.py::method::Money.__init__
+    0.805  [method] playground/playground/models.py::method::Money.__le__
+    0.803  [method] playground/playground/models.py::method::Money.__mul__
+    0.798  [method] playground/playground/models.py::method::Money.__lt__
+    0.789  [method] playground/playground/models.py::method::Money.__eq__

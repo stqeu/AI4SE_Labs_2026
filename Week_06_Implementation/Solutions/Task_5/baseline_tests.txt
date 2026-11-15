@@ -1,0 +1,742 @@
+============================= test session starts =============================
+platform win32 -- Python 3.14.2, pytest-9.2.0, pluggy-1.7.0
+rootdir: C:\Users\Erik\AI4SE_Labs_2026\Week_06_Implementation\AI4SE_Playground\playground
+collected 481 items
+
+tests\test_base.py .......................                               [  4%]
+tests\test_decorators.py ..................                              [  8%]
+tests\test_enums.py ........F.FFF..                                      [ 11%]
+tests\test_events.py .....F.................F                            [ 16%]
+tests\test_exceptions.py ...............                                 [ 19%]
+tests\test_inventory.py ....................................FF.......... [ 29%]
+...................FF.                                                   [ 34%]
+tests\test_models.py ......................................FF........... [ 44%]
+..................................F.FFF.FF...........                    [ 55%]
+tests\test_orders.py ...F.....FF..F...F.FF..FFFFFF.F....F....F....F..F.. [ 66%]
+..FF..........                                                           [ 69%]
+tests\test_package.py ......                                             [ 70%]
+tests\test_pricing.py .........................FF.FFFFFF                 [ 77%]
+tests\test_repository.py ........................                        [ 82%]
+tests\test_simulation.py ..................F...F..FFF......F......       [ 91%]
+tests\test_util.py ..........................................            [100%]
+
+================================== FAILURES ===================================
+_________________ OrderStatusTests.test_cancelled_is_terminal _________________
+
+self = <tests.test_enums.OrderStatusTests testMethod=test_cancelled_is_terminal>
+
+    def test_cancelled_is_terminal(self) -> None:
+>       self.assertIs(OrderStatus.CANCELLED.is_terminal, True)
+E       AssertionError: None is not True
+
+tests\test_enums.py:61: AssertionError
+__________________ OrderStatusTests.test_new_is_not_terminal __________________
+
+self = <tests.test_enums.OrderStatusTests testMethod=test_new_is_not_terminal>
+
+    def test_new_is_not_terminal(self) -> None:
+>       self.assertIs(OrderStatus.NEW.is_terminal, False)
+E       AssertionError: None is not False
+
+tests\test_enums.py:64: AssertionError
+_______________ OrderStatusTests.test_reserved_is_not_terminal ________________
+
+self = <tests.test_enums.OrderStatusTests testMethod=test_reserved_is_not_terminal>
+
+    def test_reserved_is_not_terminal(self) -> None:
+>       self.assertIs(OrderStatus.RESERVED.is_terminal, False)
+E       AssertionError: None is not False
+
+tests\test_enums.py:67: AssertionError
+__________________ OrderStatusTests.test_shipped_is_terminal __________________
+
+self = <tests.test_enums.OrderStatusTests testMethod=test_shipped_is_terminal>
+
+    def test_shipped_is_terminal(self) -> None:
+>       self.assertIs(OrderStatus.SHIPPED.is_terminal, True)
+E       AssertionError: None is not True
+
+tests\test_enums.py:58: AssertionError
+___________ EventBusSubscribeTests.test_subscribe_registers_handler ___________
+
+self = <tests.test_events.EventBusSubscribeTests testMethod=test_subscribe_registers_handler>
+
+    def test_subscribe_registers_handler(self) -> None:
+        self.bus.subscribe(EventType.STOCK_ADDED, lambda p: None)
+        self.assertEqual(len(self.bus), 1)
+>       self.assertIn(EventType.STOCK_ADDED, self.bus)
+E       AssertionError: <EventType.STOCK_ADDED: 1> not found in <playground.events.EventBus object at 0x00000148B18A29F0>
+
+tests\test_events.py:22: AssertionError
+____________ EventBusContainsTests.test_contains_true_with_handler ____________
+
+self = <tests.test_events.EventBusContainsTests testMethod=test_contains_true_with_handler>
+
+    def test_contains_true_with_handler(self) -> None:
+        bus = EventBus()
+        bus.subscribe(EventType.ORDER_SHIPPED, lambda p: None)
+>       self.assertIn(EventType.ORDER_SHIPPED, bus)
+E       AssertionError: <EventType.ORDER_SHIPPED: 4> not found in <playground.events.EventBus object at 0x00000148B18AEF90>
+
+tests\test_events.py:159: AssertionError
+____ InventoryLedgerContainsLenIterTests.test_contains_normalized_present _____
+
+self = <tests.test_inventory.InventoryLedgerContainsLenIterTests testMethod=test_contains_normalized_present>
+
+    def test_contains_normalized_present(self) -> None:
+        self.ledger.add_stock("EL-1001", 1)
+>       self.assertTrue(" el-1001 " in self.ledger)
+E       AssertionError: False is not true
+
+tests\test_inventory.py:222: AssertionError
+_ InventoryLedgerContainsLenIterTests.test_contains_present_even_if_zero_on_hand_after_commit _
+
+self = <tests.test_inventory.InventoryLedgerContainsLenIterTests testMethod=test_contains_present_even_if_zero_on_hand_after_commit>
+
+    def test_contains_present_even_if_zero_on_hand_after_commit(self) -> None:
+        # Key remains in _on_hand after full commit, so __contains__ is True.
+        self.ledger.add_stock("EL-1001", 2)
+        self.ledger.reserve("EL-1001", 2)
+        self.ledger.commit("EL-1001", 2)
+>       self.assertTrue("EL-1001" in self.ledger)
+E       AssertionError: False is not true
+
+tests\test_inventory.py:232: AssertionError
+___________________ WarehouseTests.test_stock_report_empty ____________________
+
+self = <tests.test_inventory.WarehouseTests testMethod=test_stock_report_empty>
+
+    def test_stock_report_empty(self) -> None:
+>       self.assertEqual(self.wh.stock_report(), {})
+E       AssertionError: None != {}
+
+tests\test_inventory.py:400: AssertionError
+______________ WarehouseTests.test_stock_report_lists_available _______________
+
+self = <tests.test_inventory.WarehouseTests testMethod=test_stock_report_lists_available>
+
+    def test_stock_report_lists_available(self) -> None:
+        self.wh.receive("GR-2001", 3)
+        self.wh.receive("EL-1001", 2)
+        self.ledger.reserve("EL-1001", 1)
+>       self.assertEqual(self.wh.stock_report(), {"EL-1001": 1, "GR-2001": 3})
+E       AssertionError: None != {'EL-1001': 1, 'GR-2001': 3}
+
+tests\test_inventory.py:397: AssertionError
+___________________ MoneyMiscTests.test_bool_false_for_zero ___________________
+
+self = <tests.test_models.MoneyMiscTests testMethod=test_bool_false_for_zero>
+
+    def test_bool_false_for_zero(self) -> None:
+>       self.assertFalse(bool(Money(0)))
+                         ^^^^^^^^^^^^^^
+E       TypeError: __bool__ should return bool, returned NoneType
+
+tests\test_models.py:172: TypeError
+__________________ MoneyMiscTests.test_bool_true_for_nonzero __________________
+
+self = <tests.test_models.MoneyMiscTests testMethod=test_bool_true_for_nonzero>
+
+    def test_bool_true_for_nonzero(self) -> None:
+>       self.assertTrue(bool(Money(1)))
+                        ^^^^^^^^^^^^^^
+E       TypeError: __bool__ should return bool, returned NoneType
+
+tests\test_models.py:175: TypeError
+_________ CustomerTests.test_can_afford_accounts_for_existing_balance _________
+
+self = <tests.test_models.CustomerTests testMethod=test_can_afford_accounts_for_existing_balance>
+
+    def test_can_afford_accounts_for_existing_balance(self) -> None:
+        c = Customer("C-1", "A", Money(1000))
+>       c.charge(Money(600))
+
+tests\test_models.py:459: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = Customer('C-1'), total = Money(600)
+
+    def charge(self, total: Money) -> None:
+        """Increase the balance by ``total``, raising if the limit would be exceeded."""
+        if not self.can_afford(total):
+>           raise ValueError("credit limit exceeded")
+E           ValueError: credit limit exceeded
+
+playground\models.py:267: ValueError
+______________ CustomerTests.test_can_afford_non_money_rejected _______________
+
+self = <tests.test_models.CustomerTests testMethod=test_can_afford_non_money_rejected>
+
+    def test_can_afford_non_money_rejected(self) -> None:
+>       with self.assertRaises(TypeError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: TypeError not raised
+
+tests\test_models.py:464: AssertionError
+_______________ CustomerTests.test_can_afford_true_within_limit _______________
+
+self = <tests.test_models.CustomerTests testMethod=test_can_afford_true_within_limit>
+
+    def test_can_afford_true_within_limit(self) -> None:
+        c = Customer("C-1", "A", Money(1000))
+>       self.assertTrue(c.can_afford(Money(1000)))
+E       AssertionError: None is not true
+
+tests\test_models.py:451: AssertionError
+_____________ CustomerTests.test_charge_exactly_to_limit_allowed ______________
+
+self = <tests.test_models.CustomerTests testMethod=test_charge_exactly_to_limit_allowed>
+
+    def test_charge_exactly_to_limit_allowed(self) -> None:
+        c = Customer("C-1", "A", Money(100))
+>       c.charge(Money(100))
+
+tests\test_models.py:483: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = Customer('C-1'), total = Money(100)
+
+    def charge(self, total: Money) -> None:
+        """Increase the balance by ``total``, raising if the limit would be exceeded."""
+        if not self.can_afford(total):
+>           raise ValueError("credit limit exceeded")
+E           ValueError: credit limit exceeded
+
+playground\models.py:267: ValueError
+_________________ CustomerTests.test_charge_increases_balance _________________
+
+self = <tests.test_models.CustomerTests testMethod=test_charge_increases_balance>
+
+    def test_charge_increases_balance(self) -> None:
+        c = Customer("C-1", "A", Money(1000))
+>       c.charge(Money(300))
+
+tests\test_models.py:469: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = Customer('C-1'), total = Money(300)
+
+    def charge(self, total: Money) -> None:
+        """Increase the balance by ``total``, raising if the limit would be exceeded."""
+        if not self.can_afford(total):
+>           raise ValueError("credit limit exceeded")
+E           ValueError: credit limit exceeded
+
+playground\models.py:267: ValueError
+__________ CustomerTests.test_charge_non_money_propagates_type_error __________
+
+self = <tests.test_models.CustomerTests testMethod=test_charge_non_money_propagates_type_error>
+
+    def test_charge_non_money_propagates_type_error(self) -> None:
+        with self.assertRaises(TypeError):
+>           Customer("C-1", "A", Money(100)).charge(5)  # type: ignore[arg-type]
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_models.py:488: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def charge(self, total: Money) -> None:
+        """Increase the balance by ``total``, raising if the limit would be exceeded."""
+        if not self.can_afford(total):
+>           raise ValueError("credit limit exceeded")
+E           ValueError: credit limit exceeded
+
+playground\models.py:267: ValueError
+__________ OrderStateMachineTests.test_call_is_alias_for_transition ___________
+
+self = <tests.test_orders.OrderStateMachineTests testMethod=test_call_is_alias_for_transition>
+
+    def test_call_is_alias_for_transition(self) -> None:
+        sm = OrderStateMachine()
+>       self.assertIs(sm(OrderStatus.RESERVED, OrderStatus.SHIPPED), OrderStatus.SHIPPED)
+E       AssertionError: None is not <OrderStatus.SHIPPED: 'shipped'>
+
+tests\test_orders.py:70: AssertionError
+____________ OrderStateMachineTests.test_transition_illegal_raises ____________
+
+self = <tests.test_orders.OrderStateMachineTests testMethod=test_transition_illegal_raises>
+
+    def test_transition_illegal_raises(self) -> None:
+>       with self.assertRaises(InvalidTransitionError) as ctx:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: InvalidTransitionError not raised
+
+tests\test_orders.py:63: AssertionError
+______ OrderStateMachineTests.test_transition_returns_target_when_legal _______
+
+self = <tests.test_orders.OrderStateMachineTests testMethod=test_transition_returns_target_when_legal>
+
+    def test_transition_returns_target_when_legal(self) -> None:
+        sm = OrderStateMachine()
+>       self.assertIs(sm.transition(OrderStatus.NEW, OrderStatus.RESERVED), OrderStatus.RESERVED)
+E       AssertionError: None is not <OrderStatus.RESERVED: 'reserved'>
+
+tests\test_orders.py:60: AssertionError
+__________________ OrderConstructionTests.test_initial_state __________________
+
+self = <tests.test_orders.OrderConstructionTests testMethod=test_initial_state>
+
+    def test_initial_state(self) -> None:
+        o = _order("ORD-9")
+        self.assertEqual(o.order_id, "ORD-9")
+        self.assertEqual(o.customer.customer_id, "C-1")
+        self.assertIs(o.status, OrderStatus.NEW)
+        self.assertEqual(o.items, ())
+>       self.assertEqual(len(o), 0)
+                         ^^^^^^
+E       TypeError: 'NoneType' object cannot be interpreted as an integer
+
+tests\test_orders.py:82: TypeError
+______________ OrderAddItemTests.test_add_after_advance_rejected ______________
+
+self = <tests.test_orders.OrderAddItemTests testMethod=test_add_after_advance_rejected>
+
+    def test_add_after_advance_rejected(self) -> None:
+        self.order.add_item(LineItem("EL-1001", 1, Money(1)))
+        self.order.advance(OrderStatus.RESERVED)
+        with self.assertRaises(InvalidTransitionError) as ctx:
+            self.order.add_item(LineItem("GR-2001", 1, Money(1)))
+>       self.assertIs(ctx.exception.source, OrderStatus.RESERVED)
+E       AssertionError: None is not <OrderStatus.RESERVED: 'reserved'>
+
+tests\test_orders.py:138: AssertionError
+_________________ OrderAddItemTests.test_add_appends_new_sku __________________
+
+self = <tests.test_orders.OrderAddItemTests testMethod=test_add_appends_new_sku>
+
+    def test_add_appends_new_sku(self) -> None:
+        self.order.add_item(LineItem("EL-1001", 1, Money(250)))
+        self.order.add_item(LineItem("GR-2001", 2, Money(100)))
+>       self.assertEqual(len(self.order), 2)
+                         ^^^^^^^^^^^^^^^
+E       TypeError: 'NoneType' object cannot be interpreted as an integer
+
+tests\test_orders.py:113: TypeError
+_____________ OrderAddItemTests.test_add_same_sku_merges_quantity _____________
+
+self = <tests.test_orders.OrderAddItemTests testMethod=test_add_same_sku_merges_quantity>
+
+    def test_add_same_sku_merges_quantity(self) -> None:
+        self.order.add_item(LineItem("EL-1001", 1, Money(250)))
+        self.order.add_item(LineItem("EL-1001", 2, Money(250)))
+>       self.assertEqual(len(self.order), 1)
+                         ^^^^^^^^^^^^^^^
+E       TypeError: 'NoneType' object cannot be interpreted as an integer
+
+tests\test_orders.py:119: TypeError
+_____________ OrderAdvanceTests.test_advance_from_terminal_raises _____________
+
+self = <tests.test_orders.OrderAdvanceTests testMethod=test_advance_from_terminal_raises>
+
+    def test_advance_from_terminal_raises(self) -> None:
+        o = _order()
+        o.advance(OrderStatus.CANCELLED)
+>       with self.assertRaises(InvalidTransitionError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: InvalidTransitionError not raised
+
+tests\test_orders.py:175: AssertionError
+____________ OrderAdvanceTests.test_advance_to_same_status_raises _____________
+
+self = <tests.test_orders.OrderAdvanceTests testMethod=test_advance_to_same_status_raises>
+
+    def test_advance_to_same_status_raises(self) -> None:
+        o = _order()
+>       with self.assertRaises(InvalidTransitionError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: InvalidTransitionError not raised
+
+tests\test_orders.py:180: AssertionError
+___________________ OrderAdvanceTests.test_cancel_from_new ____________________
+
+self = <tests.test_orders.OrderAdvanceTests testMethod=test_cancel_from_new>
+
+    def test_cancel_from_new(self) -> None:
+        o = _order()
+        o.advance(OrderStatus.CANCELLED)
+>       self.assertIs(o.status, OrderStatus.CANCELLED)
+E       AssertionError: None is not <OrderStatus.CANCELLED: 'cancelled'>
+
+tests\test_orders.py:158: AssertionError
+_________________ OrderAdvanceTests.test_cancel_from_reserved _________________
+
+self = <tests.test_orders.OrderAdvanceTests testMethod=test_cancel_from_reserved>
+
+    def test_cancel_from_reserved(self) -> None:
+        o = _order()
+        o.advance(OrderStatus.RESERVED)
+        o.advance(OrderStatus.CANCELLED)
+>       self.assertIs(o.status, OrderStatus.CANCELLED)
+E       AssertionError: None is not <OrderStatus.CANCELLED: 'cancelled'>
+
+tests\test_orders.py:164: AssertionError
+________________ OrderAdvanceTests.test_happy_path_to_shipped _________________
+
+self = <tests.test_orders.OrderAdvanceTests testMethod=test_happy_path_to_shipped>
+
+    def test_happy_path_to_shipped(self) -> None:
+        o = _order()
+        o.advance(OrderStatus.RESERVED)
+>       self.assertIs(o.status, OrderStatus.RESERVED)
+E       AssertionError: None is not <OrderStatus.RESERVED: 'reserved'>
+
+tests\test_orders.py:151: AssertionError
+_______ OrderAdvanceTests.test_illegal_advance_raises_and_keeps_status ________
+
+self = <tests.test_orders.OrderAdvanceTests testMethod=test_illegal_advance_raises_and_keeps_status>
+
+    def test_illegal_advance_raises_and_keeps_status(self) -> None:
+        o = _order()
+>       with self.assertRaises(InvalidTransitionError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: InvalidTransitionError not raised
+
+tests\test_orders.py:168: AssertionError
+___ OrderTotalTests.test_total_reflects_merged_quantities_for_bulk_discount ___
+
+self = <tests.test_orders.OrderTotalTests testMethod=test_total_reflects_merged_quantities_for_bulk_discount>
+
+    def test_total_reflects_merged_quantities_for_bulk_discount(self) -> None:
+        o = _order(pricing=BulkDiscountPricing(FlatPricing(), 3, 10))
+        o.add_item(LineItem("EL-1001", 1, Money(100)))
+        o.add_item(LineItem("EL-1001", 2, Money(100)))
+        # 3 units at 100 = 300, 10% off = 270
+>       self.assertEqual(o.total, Money(270))
+E       AssertionError: None != Money(270)
+
+tests\test_orders.py:198: AssertionError
+________________________ OrderContainerTests.test_len _________________________
+
+self = <tests.test_orders.OrderContainerTests testMethod=test_len>
+
+    def test_len(self) -> None:
+>       self.assertEqual(len(self.order), 2)
+                         ^^^^^^^^^^^^^^^
+E       TypeError: 'NoneType' object cannot be interpreted as an integer
+
+tests\test_orders.py:215: TypeError
+________________ OrderEqualityTests.test_repr_includes_status _________________
+
+self = <tests.test_orders.OrderEqualityTests testMethod=test_repr_includes_status>
+
+    def test_repr_includes_status(self) -> None:
+        o = _order("ORD-7")
+        self.assertEqual(repr(o), "Order('ORD-7', new)")
+        o.advance(OrderStatus.CANCELLED)
+>       self.assertEqual(repr(o), "Order('ORD-7', cancelled)")
+                         ^^^^^^^
+
+tests\test_orders.py:245: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <[AttributeError("'NoneType' object has no attribute 'value'") raised in repr()] Order object at 0x148b1bf2850>
+
+    def __repr__(self) -> str:
+        """Return a developer-friendly representation."""
+>       return f"Order({self._order_id!r}, {self._status.value})"
+                                            ^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'value'
+
+playground\orders.py:122: AttributeError
+_____________ OrderBuilderTests.test_build_merges_duplicate_skus ______________
+
+self = <tests.test_orders.OrderBuilderTests testMethod=test_build_merges_duplicate_skus>
+
+    def test_build_merges_duplicate_skus(self) -> None:
+        b = OrderBuilder(_customer(), FlatPricing())
+        b.add("EL-1001", 1, Money(100)).add("EL-1001", 2, Money(100))
+        order = b.build("ORD-1")
+>       self.assertEqual(len(order), 1)
+                         ^^^^^^^^^^
+E       TypeError: 'NoneType' object cannot be interpreted as an integer
+
+tests\test_orders.py:306: TypeError
+________ OrderBuilderTests.test_build_twice_creates_independent_orders ________
+
+self = <tests.test_orders.OrderBuilderTests testMethod=test_build_twice_creates_independent_orders>
+
+    def test_build_twice_creates_independent_orders(self) -> None:
+        b = OrderBuilder(_customer(), FlatPricing())
+        b.add("EL-1001", 1, Money(1))
+        o1 = b.build("ORD-1")
+        b.add("GR-2001", 1, Money(1))
+        o2 = b.build("ORD-2")
+>       self.assertEqual(len(o1), 1)
+                         ^^^^^^^
+E       TypeError: 'NoneType' object cannot be interpreted as an integer
+
+tests\test_orders.py:315: TypeError
+____________________ OrderLogTests.test_by_status_filters _____________________
+
+self = <tests.test_orders.OrderLogTests testMethod=test_by_status_filters>
+
+    def test_by_status_filters(self) -> None:
+        a, b, c = _order("ORD-1"), _order("ORD-2"), _order("ORD-3")
+        for o in (a, b, c):
+            self.log.record(o)
+        b.advance(OrderStatus.CANCELLED)
+        c.advance(OrderStatus.RESERVED)
+>       self.assertEqual([o.order_id for o in self.log.by_status(OrderStatus.NEW)], ["ORD-1"])
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: 'NoneType' object is not iterable
+
+tests\test_orders.py:396: TypeError
+_______________ OrderLogTests.test_by_status_is_lazy_generator ________________
+
+self = <tests.test_orders.OrderLogTests testMethod=test_by_status_is_lazy_generator>
+
+    def test_by_status_is_lazy_generator(self) -> None:
+        gen = self.log.by_status(OrderStatus.NEW)
+        self.assertFalse(hasattr(gen, "__len__"))
+>       self.assertEqual(list(gen), [])
+                         ^^^^^^^^^
+E       TypeError: 'NoneType' object is not iterable
+
+tests\test_orders.py:404: TypeError
+__________ BulkDiscountPriceTests.test_at_threshold_applies_discount __________
+
+self = <tests.test_pricing.BulkDiscountPriceTests testMethod=test_at_threshold_applies_discount>
+
+    def test_at_threshold_applies_discount(self) -> None:
+        items = [LineItem("EL-1001", 3, Money(1000))]
+        d = BulkDiscountPricing(FlatPricing(), 3, 10)
+>       self.assertEqual(d.price(items), Money(2700))
+E       AssertionError: None != Money(2700)
+
+tests\test_pricing.py:127: AssertionError
+_______ BulkDiscountPriceTests.test_below_threshold_returns_base_total ________
+
+self = <tests.test_pricing.BulkDiscountPriceTests testMethod=test_below_threshold_returns_base_total>
+
+    def test_below_threshold_returns_base_total(self) -> None:
+        items = [LineItem("EL-1001", 2, Money(1000))]
+        d = BulkDiscountPricing(FlatPricing(), 3, 50)
+>       self.assertEqual(d.price(items), Money(2000))
+E       AssertionError: None != Money(2000)
+
+tests\test_pricing.py:122: AssertionError
+__________ BulkDiscountPriceTests.test_discount_uses_floor_division ___________
+
+self = <tests.test_pricing.BulkDiscountPriceTests testMethod=test_discount_uses_floor_division>
+
+    def test_discount_uses_floor_division(self) -> None:
+        # base 333; 333 * 10 // 100 = 33 -> 300
+        items = [LineItem("EL-1001", 1, Money(333))]
+        d = BulkDiscountPricing(FlatPricing(), 1, 10)
+>       self.assertEqual(d.price(items), Money(300))
+E       AssertionError: None != Money(300)
+
+tests\test_pricing.py:144: AssertionError
+___________ BulkDiscountPriceTests.test_empty_items_below_threshold ___________
+
+self = <tests.test_pricing.BulkDiscountPriceTests testMethod=test_empty_items_below_threshold>
+
+    def test_empty_items_below_threshold(self) -> None:
+        d = BulkDiscountPricing(FlatPricing(), 1, 50)
+>       self.assertEqual(d.price([]), Money(0))
+E       AssertionError: None != Money(0)
+
+tests\test_pricing.py:159: AssertionError
+____________ BulkDiscountPriceTests.test_full_discount_yields_zero ____________
+
+self = <tests.test_pricing.BulkDiscountPriceTests testMethod=test_full_discount_yields_zero>
+
+    def test_full_discount_yields_zero(self) -> None:
+        items = [LineItem("EL-1001", 2, Money(500))]
+        d = BulkDiscountPricing(FlatPricing(), 1, 100)
+>       self.assertEqual(d.price(items), Money(0))
+E       AssertionError: None != Money(0)
+
+tests\test_pricing.py:149: AssertionError
+__________ BulkDiscountPriceTests.test_quantity_summed_across_lines ___________
+
+self = <tests.test_pricing.BulkDiscountPriceTests testMethod=test_quantity_summed_across_lines>
+
+    def test_quantity_summed_across_lines(self) -> None:
+        items = [LineItem("EL-1001", 1, Money(1000)), LineItem("GR-2001", 2, Money(100))]
+        d = BulkDiscountPricing(FlatPricing(), 3, 10)
+        # base = 1000 + 200 = 1200; discount = 120 -> 1080
+>       self.assertEqual(d.price(items), Money(1080))
+E       AssertionError: None != Money(1080)
+
+tests\test_pricing.py:133: AssertionError
+_______________ BulkDiscountPriceTests.test_wraps_base_with_tax _______________
+
+self = <tests.test_pricing.BulkDiscountPriceTests testMethod=test_wraps_base_with_tax>
+
+    def test_wraps_base_with_tax(self) -> None:
+        items = [LineItem("EL-1001", 1, Money(1000))]
+        d = BulkDiscountPricing(FlatPricing(1000), 1, 10)
+        # base with 10% tax = 1100; discount = 110 -> 990
+>       self.assertEqual(d.price(items), Money(990))
+E       AssertionError: None != Money(990)
+
+tests\test_pricing.py:155: AssertionError
+_ BulkDiscountPriceTests.test_zero_percent_returns_base_even_above_threshold __
+
+self = <tests.test_pricing.BulkDiscountPriceTests testMethod=test_zero_percent_returns_base_even_above_threshold>
+
+    def test_zero_percent_returns_base_even_above_threshold(self) -> None:
+        items = [LineItem("EL-1001", 5, Money(100))]
+        d = BulkDiscountPricing(FlatPricing(), 1, 0)
+>       self.assertEqual(d.price(items), Money(500))
+E       AssertionError: None != Money(500)
+
+tests\test_pricing.py:138: AssertionError
+__________ SimulationStepTests.test_cancel_path_releases_reservation __________
+
+self = <tests.test_simulation.SimulationStepTests testMethod=test_cancel_path_releases_reservation>
+
+    def test_cancel_path_releases_reservation(self) -> None:
+        wh = build_default_warehouse()
+        sim = self._sim(seed=0, warehouse=wh)
+        cancelled_order = None
+        for _ in range(200):
+            on_hand_before = dict(wh.ledger._on_hand)  # type: ignore[attr-defined]
+            order = sim.step()
+            # No reservation may remain held after any step completes.
+            self.assertTrue(all(v == 0 for v in wh.ledger._reserved.values()))  # type: ignore[attr-defined]
+            if order is not None and order.status is OrderStatus.CANCELLED:
+                cancelled_order = order
+                # Cancelled orders must not reduce on-hand stock.
+                self.assertEqual(wh.ledger._on_hand, on_hand_before)  # type: ignore[attr-defined]
+                break
+>       self.assertIsNotNone(cancelled_order)
+E       AssertionError: unexpectedly None
+
+tests\test_simulation.py:219: AssertionError
+_ SimulationStepTests.test_order_line_has_unit_price_1000_and_quantity_1_to_3 _
+
+self = <tests.test_simulation.SimulationStepTests testMethod=test_order_line_has_unit_price_1000_and_quantity_1_to_3>
+
+    def test_order_line_has_unit_price_1000_and_quantity_1_to_3(self) -> None:
+        sim = self._sim(seed=3)
+        order = sim.step()
+>       self.assertEqual(len(order), 1)
+                         ^^^^^^^^^^
+E       TypeError: 'NoneType' object cannot be interpreted as an integer
+
+tests\test_simulation.py:183: TypeError
+_____________ SimulationStepTests.test_same_seed_is_reproducible ______________
+
+self = <tests.test_simulation.SimulationStepTests testMethod=test_same_seed_is_reproducible>
+
+    def test_same_seed_is_reproducible(self) -> None:
+        def run(seed: int) -> List[str]:
+            sim = self._sim(seed=seed)
+            return [sim.step().status.value for _ in range(15)]
+    
+>       self.assertEqual(run(42), run(42))
+                         ^^^^^^^
+
+tests\test_simulation.py:261: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+seed = 42
+
+    def run(seed: int) -> List[str]:
+        sim = self._sim(seed=seed)
+>       return [sim.step().status.value for _ in range(15)]
+                ^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'value'
+
+tests\test_simulation.py:259: AttributeError
+______ SimulationStepTests.test_shipped_path_publishes_and_adds_revenue _______
+
+self = <tests.test_simulation.SimulationStepTests testMethod=test_shipped_path_publishes_and_adds_revenue>
+
+    def test_shipped_path_publishes_and_adds_revenue(self) -> None:
+        sim = self._sim(seed=0)
+        seen: List[str] = []
+        sim.bus.subscribe(EventType.ORDER_SHIPPED, lambda p: seen.append("shipped"))
+        sim.bus.subscribe(EventType.STOCK_RESERVED, lambda p: seen.append("reserved"))
+        sim.bus.subscribe(EventType.ORDER_CANCELLED, lambda p: seen.append("cancelled"))
+        for _ in range(40):
+            order = sim.step()
+            if order is not None and order.status is OrderStatus.SHIPPED:
+                break
+        else:
+>           self.fail("no shipped order produced")
+E           AssertionError: no shipped order produced
+
+tests\test_simulation.py:199: AssertionError
+_______ SimulationStepTests.test_step_returns_order_and_accounts_for_it _______
+
+self = <tests.test_simulation.SimulationStepTests testMethod=test_step_returns_order_and_accounts_for_it>
+
+    def test_step_returns_order_and_accounts_for_it(self) -> None:
+        sim = self._sim(seed=1)
+        order = sim.step()
+        self.assertIsInstance(order, Order)
+>       self.assertIn(order.status, (OrderStatus.SHIPPED, OrderStatus.CANCELLED))
+E       AssertionError: None not found in (<OrderStatus.SHIPPED: 'shipped'>, <OrderStatus.CANCELLED: 'cancelled'>)
+
+tests\test_simulation.py:166: AssertionError
+__ BuildDefaultWarehouseTests.test_returns_warehouse_with_three_skus_each_20 __
+
+self = <tests.test_simulation.BuildDefaultWarehouseTests testMethod=test_returns_warehouse_with_three_skus_each_20>
+
+    def test_returns_warehouse_with_three_skus_each_20(self) -> None:
+        wh = build_default_warehouse()
+        self.assertIsInstance(wh, Warehouse)
+        self.assertEqual(wh.identity(), "WH-1")
+>       self.assertEqual(
+            wh.stock_report(), {"EL-1001": 20, "GR-2001": 20, "HW-3001": 20}
+        )
+E       AssertionError: None != {'EL-1001': 20, 'GR-2001': 20, 'HW-3001': 20}
+
+tests\test_simulation.py:291: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_enums.py::OrderStatusTests::test_cancelled_is_terminal - As...
+FAILED tests/test_enums.py::OrderStatusTests::test_new_is_not_terminal - Asse...
+FAILED tests/test_enums.py::OrderStatusTests::test_reserved_is_not_terminal
+FAILED tests/test_enums.py::OrderStatusTests::test_shipped_is_terminal - Asse...
+FAILED tests/test_events.py::EventBusSubscribeTests::test_subscribe_registers_handler
+FAILED tests/test_events.py::EventBusContainsTests::test_contains_true_with_handler
+FAILED tests/test_inventory.py::InventoryLedgerContainsLenIterTests::test_contains_normalized_present
+FAILED tests/test_inventory.py::InventoryLedgerContainsLenIterTests::test_contains_present_even_if_zero_on_hand_after_commit
+FAILED tests/test_inventory.py::WarehouseTests::test_stock_report_empty - Ass...
+FAILED tests/test_inventory.py::WarehouseTests::test_stock_report_lists_available
+FAILED tests/test_models.py::MoneyMiscTests::test_bool_false_for_zero - TypeE...
+FAILED tests/test_models.py::MoneyMiscTests::test_bool_true_for_nonzero - Typ...
+FAILED tests/test_models.py::CustomerTests::test_can_afford_accounts_for_existing_balance
+FAILED tests/test_models.py::CustomerTests::test_can_afford_non_money_rejected
+FAILED tests/test_models.py::CustomerTests::test_can_afford_true_within_limit
+FAILED tests/test_models.py::CustomerTests::test_charge_exactly_to_limit_allowed
+FAILED tests/test_models.py::CustomerTests::test_charge_increases_balance - V...
+FAILED tests/test_models.py::CustomerTests::test_charge_non_money_propagates_type_error
+FAILED tests/test_orders.py::OrderStateMachineTests::test_call_is_alias_for_transition
+FAILED tests/test_orders.py::OrderStateMachineTests::test_transition_illegal_raises
+FAILED tests/test_orders.py::OrderStateMachineTests::test_transition_returns_target_when_legal
+FAILED tests/test_orders.py::OrderConstructionTests::test_initial_state - Typ...
+FAILED tests/test_orders.py::OrderAddItemTests::test_add_after_advance_rejected
+FAILED tests/test_orders.py::OrderAddItemTests::test_add_appends_new_sku - Ty...
+FAILED tests/test_orders.py::OrderAddItemTests::test_add_same_sku_merges_quantity
+FAILED tests/test_orders.py::OrderAdvanceTests::test_advance_from_terminal_raises
+FAILED tests/test_orders.py::OrderAdvanceTests::test_advance_to_same_status_raises
+FAILED tests/test_orders.py::OrderAdvanceTests::test_cancel_from_new - Assert...
+FAILED tests/test_orders.py::OrderAdvanceTests::test_cancel_from_reserved - A...
+FAILED tests/test_orders.py::OrderAdvanceTests::test_happy_path_to_shipped - ...
+FAILED tests/test_orders.py::OrderAdvanceTests::test_illegal_advance_raises_and_keeps_status
+FAILED tests/test_orders.py::OrderTotalTests::test_total_reflects_merged_quantities_for_bulk_discount
+FAILED tests/test_orders.py::OrderContainerTests::test_len - TypeError: 'None...
+FAILED tests/test_orders.py::OrderEqualityTests::test_repr_includes_status - ...
+FAILED tests/test_orders.py::OrderBuilderTests::test_build_merges_duplicate_skus
+FAILED tests/test_orders.py::OrderBuilderTests::test_build_twice_creates_independent_orders
+FAILED tests/test_orders.py::OrderLogTests::test_by_status_filters - TypeErro...
+FAILED tests/test_orders.py::OrderLogTests::test_by_status_is_lazy_generator
+FAILED tests/test_pricing.py::BulkDiscountPriceTests::test_at_threshold_applies_discount
+FAILED tests/test_pricing.py::BulkDiscountPriceTests::test_below_threshold_returns_base_total
+FAILED tests/test_pricing.py::BulkDiscountPriceTests::test_discount_uses_floor_division
+FAILED tests/test_pricing.py::BulkDiscountPriceTests::test_empty_items_below_threshold
+FAILED tests/test_pricing.py::BulkDiscountPriceTests::test_full_discount_yields_zero
+FAILED tests/test_pricing.py::BulkDiscountPriceTests::test_quantity_summed_across_lines
+FAILED tests/test_pricing.py::BulkDiscountPriceTests::test_wraps_base_with_tax
+FAILED tests/test_pricing.py::BulkDiscountPriceTests::test_zero_percent_returns_base_even_above_threshold
+FAILED tests/test_simulation.py::SimulationStepTests::test_cancel_path_releases_reservation
+FAILED tests/test_simulation.py::SimulationStepTests::test_order_line_has_unit_price_1000_and_quantity_1_to_3
+FAILED tests/test_simulation.py::SimulationStepTests::test_same_seed_is_reproducible
+FAILED tests/test_simulation.py::SimulationStepTests::test_shipped_path_publishes_and_adds_revenue
+FAILED tests/test_simulation.py::SimulationStepTests::test_step_returns_order_and_accounts_for_it
+FAILED tests/test_simulation.py::BuildDefaultWarehouseTests::test_returns_warehouse_with_three_skus_each_20
+======================= 52 failed, 429 passed in 0.76s ========================
