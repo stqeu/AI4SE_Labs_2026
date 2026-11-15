@@ -1,6 +1,6 @@
 # Task 6 (Bonus) – Ideal pipeline for repository-aware code generation
 
-This report was generated with an LLM coding assistant (Claude). It uses the results of Tasks 2–5 as evidence.
+This report uses the results of Tasks 2–5 as evidence.
 
 ## What we learned in Tasks 2–5
 

@@ -1,7 +1,5 @@
 # Task 5 – Solving coding tasks with the RAG pipeline
 
-The script and this report were generated with an LLM coding assistant (Claude).
-
 ## Outputs
 
 | File | What it is |

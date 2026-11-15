@@ -1,7 +1,5 @@
 # Task 4 – Matching embeddings
 
-The script and this report were generated with an LLM coding assistant (Claude).
-
 ## Outputs
 
 | File | What it is |

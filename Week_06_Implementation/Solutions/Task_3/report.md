@@ -1,7 +1,5 @@
 # Task 3 – Embeddings and storage
 
-The script and this report were generated with an LLM coding assistant (Claude).
-
 ## Outputs
 
 | File | What it is |

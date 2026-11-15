@@ -1,7 +1,5 @@
 # Task 2 – Chunking the repository
 
-The script and this report were generated with an LLM coding assistant (Claude).
-
 ## Outputs
 
 | File | What it is |
