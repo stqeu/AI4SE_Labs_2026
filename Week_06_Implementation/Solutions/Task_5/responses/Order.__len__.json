@@ -1,0 +1,12 @@
+{
+  "task": "Order.__len__",
+  "prompt_hash": "dcbbca715c11479a",
+  "model": "gpt-5-mini",
+  "usage": {
+    "model": "gpt-5-mini-2025-08-07",
+    "prompt_tokens": 961,
+    "completion_tokens": 166,
+    "seconds": 2.7
+  },
+  "answer": "```python\ndef __len__(self) -> int:\n    \"\"\"Return the number of line items.\"\"\"\n    return len(self._items)\n```"
+}

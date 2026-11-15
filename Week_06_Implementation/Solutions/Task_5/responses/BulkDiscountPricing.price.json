@@ -1,0 +1,12 @@
+{
+  "task": "BulkDiscountPricing.price",
+  "prompt_hash": "70afc899962b7a00",
+  "model": "gpt-5-mini",
+  "usage": {
+    "model": "gpt-5-mini-2025-08-07",
+    "prompt_tokens": 1003,
+    "completion_tokens": 1129,
+    "seconds": 10.2
+  },
+  "answer": "```python\ndef price(self, items: Sequence[LineItem]) -> Money:\n    \"\"\"Return the base price, less the discount if the quantity qualifies.\"\"\"\n    total_qty = sum(item.quantity for item in items)\n    base_total = self._base.price(items)\n    if total_qty >= self._threshold:\n        # apply percent off to the total\n        return (base_total * (100 - self._percent_off)) // 100\n    return base_total\n```"
+}

@@ -1,0 +1,12 @@
+{
+  "task": "Money.__bool__",
+  "prompt_hash": "36abfb4e8542593e",
+  "model": "gpt-5-mini",
+  "usage": {
+    "model": "gpt-5-mini-2025-08-07",
+    "prompt_tokens": 958,
+    "completion_tokens": 235,
+    "seconds": 2.9
+  },
+  "answer": "```python\ndef __bool__(self) -> bool:\n    \"\"\"Return True when the amount is non-zero.\"\"\"\n    return self._cents != 0\n```"
+}

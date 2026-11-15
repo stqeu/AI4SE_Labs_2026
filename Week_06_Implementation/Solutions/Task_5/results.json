@@ -1,0 +1,342 @@
+{
+  "OrderStateMachine.transition": {
+    "task": "OrderStateMachine.transition",
+    "file": "playground/playground/orders.py",
+    "retrieved": [
+      {
+        "id": "playground/playground/orders.py::method::OrderStateMachine.can_transition",
+        "score": 0.856
+      },
+      {
+        "id": "playground/playground/orders.py::method::Order.advance",
+        "score": 0.808
+      },
+      {
+        "id": "playground/playground/orders.py::method::OrderStateMachine.__call__",
+        "score": 0.781
+      },
+      {
+        "id": "playground/playground/orders.py::class_skeleton::OrderStateMachine",
+        "score": 0.725
+      },
+      {
+        "id": "playground/playground/orders.py::method::OrderStateMachine.allowed_from",
+        "score": 0.713
+      }
+    ],
+    "usage": {
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt_tokens": 1261,
+      "completion_tokens": 826,
+      "seconds": 7.9
+    },
+    "status": "inserted",
+    "code": "def transition(self, source: OrderStatus, target: OrderStatus) -> OrderStatus:\n    \"\"\"Return ``target`` if the transition is allowed, else raise.\"\"\"\n    if not isinstance(source, OrderStatus):\n        raise TypeError(\"source must be OrderStatus\")\n    if not isinstance(target, OrderStatus):\n        raise TypeError(\"target must be OrderStatus\")\n    if self.can_transition(source, target):\n        return target\n    raise ValueError(f\"transition from {source!r} to {target!r} is not allowed\")"
+  },
+  "OrderStatus.is_terminal": {
+    "task": "OrderStatus.is_terminal",
+    "file": "playground/playground/enums.py",
+    "retrieved": [
+      {
+        "id": "playground/playground/enums.py::class_skeleton::OrderStatus",
+        "score": 0.775
+      },
+      {
+        "id": "playground/tests/test_enums.py::test::OrderStatusTests.test_cancelled_is_terminal",
+        "score": 0.681
+      },
+      {
+        "id": "playground/tests/test_enums.py::test::OrderStatusTests.test_new_is_not_terminal",
+        "score": 0.674
+      },
+      {
+        "id": "playground/playground/orders.py::method::Order.advance",
+        "score": 0.642
+      },
+      {
+        "id": "playground/tests/test_enums.py::test::OrderStatusTests.test_shipped_is_terminal",
+        "score": 0.633
+      }
+    ],
+    "usage": {
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt_tokens": 733,
+      "completion_tokens": 368,
+      "seconds": 5.1
+    },
+    "status": "inserted",
+    "code": "def is_terminal(self) -> bool:\n    \"\"\"True when the status ends further transitions.\"\"\"\n    return self in (OrderStatus.SHIPPED, OrderStatus.CANCELLED)"
+  },
+  "InventoryLedger.__contains__": {
+    "task": "InventoryLedger.__contains__",
+    "file": "playground/playground/inventory.py",
+    "retrieved": [
+      {
+        "id": "playground/playground/inventory.py::method::InventoryLedger.__len__",
+        "score": 0.768
+      },
+      {
+        "id": "playground/playground/inventory.py::method::InventoryLedger.available",
+        "score": 0.766
+      },
+      {
+        "id": "playground/playground/inventory.py::method::InventoryLedger.__iter__",
+        "score": 0.761
+      },
+      {
+        "id": "playground/playground/inventory.py::method::InventoryLedger.add_stock",
+        "score": 0.761
+      },
+      {
+        "id": "playground/playground/inventory.py::method::InventoryLedger._require_sku",
+        "score": 0.748
+      }
+    ],
+    "usage": {
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt_tokens": 1110,
+      "completion_tokens": 733,
+      "seconds": 8.3
+    },
+    "status": "inserted",
+    "code": "def __contains__(self, sku: object) -> bool:\n    \"\"\"Return whether ``sku`` normalises to a SKU with positive on-hand stock.\"\"\"\n    try:\n        sku = self._require_sku(sku)  # normalise and ensure registered\n    except UnknownSKUError:\n        return False\n    return self._on_hand.get(sku, 0) > 0"
+  },
+  "Warehouse.stock_report": {
+    "task": "Warehouse.stock_report",
+    "file": "playground/playground/inventory.py",
+    "retrieved": [
+      {
+        "id": "playground/playground/inventory.py::method::Warehouse.receive",
+        "score": 0.751
+      },
+      {
+        "id": "playground/playground/inventory.py::module::inventory",
+        "score": 0.702
+      },
+      {
+        "id": "playground/playground/inventory.py::method::InventoryLedger.available",
+        "score": 0.69
+      },
+      {
+        "id": "playground/playground/inventory.py::method::InventoryLedger.add_stock",
+        "score": 0.678
+      },
+      {
+        "id": "playground/playground/inventory.py::class_skeleton::Warehouse",
+        "score": 0.673
+      }
+    ],
+    "usage": {
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt_tokens": 1046,
+      "completion_tokens": 665,
+      "seconds": 8.0
+    },
+    "status": "inserted",
+    "code": "def stock_report(self) -> Dict[str, int]:\n    \"\"\"Return a mapping of SKU to available quantity.\"\"\"\n    report: Dict[str, int] = {}\n    keys = set(self._ledger._on_hand.keys()) | set(self._ledger._reserved.keys())\n    for sku in keys:\n        report[sku] = self._ledger.available(sku)\n    return report"
+  },
+  "OrderLog.by_status": {
+    "task": "OrderLog.by_status",
+    "file": "playground/playground/orders.py",
+    "retrieved": [
+      {
+        "id": "playground/playground/orders.py::method::Order.status",
+        "score": 0.806
+      },
+      {
+        "id": "playground/playground/orders.py::method::OrderLog.__iter__",
+        "score": 0.734
+      },
+      {
+        "id": "playground/playground/orders.py::method::OrderLog.__getitem__",
+        "score": 0.732
+      },
+      {
+        "id": "playground/playground/orders.py::method::OrderLog.__init__",
+        "score": 0.72
+      },
+      {
+        "id": "playground/playground/orders.py::class_skeleton::OrderLog",
+        "score": 0.708
+      }
+    ],
+    "usage": {
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt_tokens": 932,
+      "completion_tokens": 250,
+      "seconds": 3.6
+    },
+    "status": "inserted",
+    "code": "def by_status(self, status: OrderStatus) -> Iterator[Order]:\n    \"\"\"Yield orders whose status matches ``status``.\"\"\"\n    for order in self._orders:\n        if order.status == status:\n            yield order"
+  },
+  "Customer.can_afford": {
+    "task": "Customer.can_afford",
+    "file": "playground/playground/models.py",
+    "retrieved": [
+      {
+        "id": "playground/playground/models.py::method::Customer.charge",
+        "score": 0.797
+      },
+      {
+        "id": "playground/playground/models.py::method::Customer.credit_limit",
+        "score": 0.765
+      },
+      {
+        "id": "playground/tests/test_models.py::test::CustomerTests.test_can_afford_false_over_limit",
+        "score": 0.706
+      },
+      {
+        "id": "playground/tests/test_models.py::test::CustomerTests.test_can_afford_accounts_for_existing_balance",
+        "score": 0.701
+      },
+      {
+        "id": "playground/tests/test_models.py::test::CustomerTests.test_can_afford_true_within_limit",
+        "score": 0.698
+      }
+    ],
+    "usage": {
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt_tokens": 877,
+      "completion_tokens": 250,
+      "seconds": 3.4
+    },
+    "status": "inserted",
+    "code": "def can_afford(self, total: Money) -> bool:\n    \"\"\"Return True if ``balance + total`` does not exceed the credit limit.\"\"\"\n    return (self._balance + total) <= self._credit_limit"
+  },
+  "Order.__len__": {
+    "task": "Order.__len__",
+    "file": "playground/playground/orders.py",
+    "retrieved": [
+      {
+        "id": "playground/playground/orders.py::method::OrderBuilder.__len__",
+        "score": 0.869
+      },
+      {
+        "id": "playground/playground/orders.py::method::Order.items",
+        "score": 0.751
+      },
+      {
+        "id": "playground/playground/orders.py::method::Order.__iter__",
+        "score": 0.751
+      },
+      {
+        "id": "playground/playground/orders.py::method::OrderLog.__len__",
+        "score": 0.746
+      },
+      {
+        "id": "playground/playground/orders.py::method::OrderBuilder.__bool__",
+        "score": 0.681
+      }
+    ],
+    "usage": {
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt_tokens": 961,
+      "completion_tokens": 166,
+      "seconds": 2.7
+    },
+    "status": "inserted",
+    "code": "def __len__(self) -> int:\n    \"\"\"Return the number of line items.\"\"\"\n    return len(self._items)"
+  },
+  "BulkDiscountPricing.price": {
+    "task": "BulkDiscountPricing.price",
+    "file": "playground/playground/pricing.py",
+    "retrieved": [
+      {
+        "id": "playground/playground/pricing.py::method::BulkDiscountPricing.threshold",
+        "score": 0.798
+      },
+      {
+        "id": "playground/playground/pricing.py::method::BulkDiscountPricing.percent_off",
+        "score": 0.796
+      },
+      {
+        "id": "playground/playground/pricing.py::method::BulkDiscountPricing.__repr__",
+        "score": 0.794
+      },
+      {
+        "id": "playground/playground/pricing.py::class_skeleton::BulkDiscountPricing",
+        "score": 0.751
+      },
+      {
+        "id": "playground/tests/test_pricing.py::test::BulkDiscountPriceTests.test_below_threshold_returns_base_total",
+        "score": 0.747
+      }
+    ],
+    "usage": {
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt_tokens": 1003,
+      "completion_tokens": 1129,
+      "seconds": 10.2
+    },
+    "status": "inserted",
+    "code": "def price(self, items: Sequence[LineItem]) -> Money:\n    \"\"\"Return the base price, less the discount if the quantity qualifies.\"\"\"\n    total_qty = sum(item.quantity for item in items)\n    base_total = self._base.price(items)\n    if total_qty >= self._threshold:\n        # apply percent off to the total\n        return (base_total * (100 - self._percent_off)) // 100\n    return base_total"
+  },
+  "EventBus.__contains__": {
+    "task": "EventBus.__contains__",
+    "file": "playground/playground/events.py",
+    "retrieved": [
+      {
+        "id": "playground/playground/events.py::method::EventBus.__init__",
+        "score": 0.76
+      },
+      {
+        "id": "playground/playground/events.py::method::EventBus.subscribe",
+        "score": 0.695
+      },
+      {
+        "id": "playground/playground/events.py::method::EventBus.__len__",
+        "score": 0.691
+      },
+      {
+        "id": "playground/playground/events.py::method::EventBus.unsubscribe",
+        "score": 0.68
+      },
+      {
+        "id": "playground/tests/test_events.py::test::EventBusContainsTests.test_contains_false_without_handlers",
+        "score": 0.665
+      }
+    ],
+    "usage": {
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt_tokens": 914,
+      "completion_tokens": 655,
+      "seconds": 5.5
+    },
+    "status": "inserted",
+    "code": "def __contains__(self, event_type: object) -> bool:\n    \"\"\"Return whether any handlers are registered for ``event_type``.\"\"\"\n    if not isinstance(event_type, EventType):\n        raise TypeError(\"event_type must be EventType\")\n    handlers = self._handlers.get(event_type)\n    return bool(handlers)"
+  },
+  "Money.__bool__": {
+    "task": "Money.__bool__",
+    "file": "playground/playground/models.py",
+    "retrieved": [
+      {
+        "id": "playground/playground/models.py::method::Money.__init__",
+        "score": 0.809
+      },
+      {
+        "id": "playground/playground/models.py::method::Money.__le__",
+        "score": 0.805
+      },
+      {
+        "id": "playground/playground/models.py::method::Money.__mul__",
+        "score": 0.803
+      },
+      {
+        "id": "playground/playground/models.py::method::Money.__lt__",
+        "score": 0.798
+      },
+      {
+        "id": "playground/playground/models.py::method::Money.__eq__",
+        "score": 0.789
+      }
+    ],
+    "usage": {
+      "model": "gpt-5-mini-2025-08-07",
+      "prompt_tokens": 958,
+      "completion_tokens": 235,
+      "seconds": 2.9
+    },
+    "status": "inserted",
+    "code": "def __bool__(self) -> bool:\n    \"\"\"Return True when the amount is non-zero.\"\"\"\n    return self._cents != 0"
+  }
+}

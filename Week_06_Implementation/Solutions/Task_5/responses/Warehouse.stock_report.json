@@ -1,0 +1,12 @@
+{
+  "task": "Warehouse.stock_report",
+  "prompt_hash": "dd6c5ccc2cfe0e4e",
+  "model": "gpt-5-mini",
+  "usage": {
+    "model": "gpt-5-mini-2025-08-07",
+    "prompt_tokens": 1046,
+    "completion_tokens": 665,
+    "seconds": 8.0
+  },
+  "answer": "```python\ndef stock_report(self) -> Dict[str, int]:\n    \"\"\"Return a mapping of SKU to available quantity.\"\"\"\n    report: Dict[str, int] = {}\n    keys = set(self._ledger._on_hand.keys()) | set(self._ledger._reserved.keys())\n    for sku in keys:\n        report[sku] = self._ledger.available(sku)\n    return report\n```"
+}

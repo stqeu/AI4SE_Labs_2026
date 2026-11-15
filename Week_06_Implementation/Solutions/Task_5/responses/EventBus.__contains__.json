@@ -1,0 +1,12 @@
+{
+  "task": "EventBus.__contains__",
+  "prompt_hash": "622f02fc6d51beb0",
+  "model": "gpt-5-mini",
+  "usage": {
+    "model": "gpt-5-mini-2025-08-07",
+    "prompt_tokens": 914,
+    "completion_tokens": 655,
+    "seconds": 5.5
+  },
+  "answer": "```python\ndef __contains__(self, event_type: object) -> bool:\n    \"\"\"Return whether any handlers are registered for ``event_type``.\"\"\"\n    if not isinstance(event_type, EventType):\n        raise TypeError(\"event_type must be EventType\")\n    handlers = self._handlers.get(event_type)\n    return bool(handlers)\n```"
+}

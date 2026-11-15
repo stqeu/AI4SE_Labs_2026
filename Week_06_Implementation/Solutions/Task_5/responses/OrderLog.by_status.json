@@ -1,0 +1,12 @@
+{
+  "task": "OrderLog.by_status",
+  "prompt_hash": "20664834ace28477",
+  "model": "gpt-5-mini",
+  "usage": {
+    "model": "gpt-5-mini-2025-08-07",
+    "prompt_tokens": 932,
+    "completion_tokens": 250,
+    "seconds": 3.6
+  },
+  "answer": "```python\ndef by_status(self, status: OrderStatus) -> Iterator[Order]:\n    \"\"\"Yield orders whose status matches ``status``.\"\"\"\n    for order in self._orders:\n        if order.status == status:\n            yield order\n```"
+}

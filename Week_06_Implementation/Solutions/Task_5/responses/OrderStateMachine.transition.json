@@ -1,0 +1,12 @@
+{
+  "task": "OrderStateMachine.transition",
+  "prompt_hash": "fe5c05608980f429",
+  "model": "gpt-5-mini",
+  "usage": {
+    "model": "gpt-5-mini-2025-08-07",
+    "prompt_tokens": 1261,
+    "completion_tokens": 826,
+    "seconds": 7.9
+  },
+  "answer": "```python\ndef transition(self, source: OrderStatus, target: OrderStatus) -> OrderStatus:\n    \"\"\"Return ``target`` if the transition is allowed, else raise.\"\"\"\n    if not isinstance(source, OrderStatus):\n        raise TypeError(\"source must be OrderStatus\")\n    if not isinstance(target, OrderStatus):\n        raise TypeError(\"target must be OrderStatus\")\n    if self.can_transition(source, target):\n        return target\n    raise ValueError(f\"transition from {source!r} to {target!r} is not allowed\")\n```"
+}

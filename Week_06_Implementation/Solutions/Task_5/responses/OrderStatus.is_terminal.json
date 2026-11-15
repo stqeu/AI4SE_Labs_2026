@@ -1,0 +1,12 @@
+{
+  "task": "OrderStatus.is_terminal",
+  "prompt_hash": "288d23b8274cd68b",
+  "model": "gpt-5-mini",
+  "usage": {
+    "model": "gpt-5-mini-2025-08-07",
+    "prompt_tokens": 733,
+    "completion_tokens": 368,
+    "seconds": 5.1
+  },
+  "answer": "```python\ndef is_terminal(self) -> bool:\n    \"\"\"True when the status ends further transitions.\"\"\"\n    return self in (OrderStatus.SHIPPED, OrderStatus.CANCELLED)\n```"
+}

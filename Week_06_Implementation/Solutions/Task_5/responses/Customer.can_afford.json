@@ -1,0 +1,12 @@
+{
+  "task": "Customer.can_afford",
+  "prompt_hash": "2f7550c536d897c8",
+  "model": "gpt-5-mini",
+  "usage": {
+    "model": "gpt-5-mini-2025-08-07",
+    "prompt_tokens": 877,
+    "completion_tokens": 250,
+    "seconds": 3.4
+  },
+  "answer": "```python\ndef can_afford(self, total: Money) -> bool:\n    \"\"\"Return True if ``balance + total`` does not exceed the credit limit.\"\"\"\n    return (self._balance + total) <= self._credit_limit\n```"
+}

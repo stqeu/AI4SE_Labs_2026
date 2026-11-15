@@ -1,0 +1,12 @@
+{
+  "task": "InventoryLedger.__contains__",
+  "prompt_hash": "72467ccfae24da97",
+  "model": "gpt-5-mini",
+  "usage": {
+    "model": "gpt-5-mini-2025-08-07",
+    "prompt_tokens": 1110,
+    "completion_tokens": 733,
+    "seconds": 8.3
+  },
+  "answer": "```python\ndef __contains__(self, sku: object) -> bool:\n    \"\"\"Return whether ``sku`` normalises to a SKU with positive on-hand stock.\"\"\"\n    try:\n        sku = self._require_sku(sku)  # normalise and ensure registered\n    except UnknownSKUError:\n        return False\n    return self._on_hand.get(sku, 0) > 0\n```"
+}
